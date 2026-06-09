@@ -1,0 +1,34 @@
+[package]
+name = "claude-signal"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "claude_signal"
+path = "src/lib.rs"
+
+[[bin]]
+name = "claude-signal"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = { version = "0.7", features = ["ws"] }
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+futures-util = "0.3"
+local-ip-address = "0.6"
+libc = "0.2"
+portable-pty = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.5", features = ["fs", "trace", "cors"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = { version = "1", features = ["v4", "serde"] }
+
+[dev-dependencies]
+http-body-util = "0.1"
