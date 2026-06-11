@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ClaudeSignal</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="phone-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mini-cat" aria-hidden="true"><span></span></div>
+          <div>
+            <p class="eyebrow">Claude CLI Status</p>
+            <h1>ClaudeSignal</h1>
+          </div>
+        </div>
+        <div id="connection" class="connection disconnected">
+          <span class="connection-dot"></span>
+          <span id="connectionText">Offline</span>
+        </div>
+      </header>
+
+      <section id="statusPanel" class="hero-card status-offline" aria-live="polite">
+        <div class="cat-scene" aria-hidden="true">
+          <div class="prompt-glyph">&gt;_</div>
+
+          <div id="emotionEmoji" class="emotion-emoji" aria-hidden="true"></div>
+
+          <div class="thought-bubble"><span></span><span></span><span></span></div>
+
+          <div class="spark spark-one"></div>
+          <div class="spark spark-two"></div>
+          <div class="spark spark-three"></div>
+          <div class="spark spark-four"></div>
+          <div class="spark spark-five"></div>
+
+          <div class="cat">
+            <div class="tail"></div>
+            <div class="body"></div>
+            <div class="belly"></div>
+            <div class="head">
+              <div class="ear ear-left"><div class="ear-inner"></div></div>
+              <div class="ear ear-right"><div class="ear-inner"></div></div>
+              <div class="stripe stripe-one"></div>
+              <div class="stripe stripe-two"></div>
+              <div class="stripe stripe-three"></div>
+              <div class="eye eye-left">
+                <div class="eye-shine"></div>
+                <div class="eye-shine-small"></div>
+              </div>
+              <div class="eye eye-right">
+                <div class="eye-shine"></div>
+                <div class="eye-shine-small"></div>
+              </div>
+              <div class="blush blush-left"></div>
+              <div class="blush blush-right"></div>
+              <div class="muzzle"></div>
+              <div class="nose"></div>
+              <div class="mouth"></div>
+              <div class="cheek-line cheek-left"></div>
+              <div class="cheek-line cheek-right"></div>
+              <div class="whisker whisker-left-one"></div>
+              <div class="whisker whisker-left-two"></div>
+              <div class="whisker whisker-right-one"></div>
+              <div class="whisker whisker-right-two"></div>
+            </div>
+            <div class="paw paw-left"></div>
+            <div class="paw paw-right"></div>
+            <div class="prop-dumbbell">
+              <div class="db-handle"></div>
+              <div class="db-weight db-left"></div>
+              <div class="db-weight db-right"></div>
+            </div>
+            <div class="prop-towel"></div>
+          </div>
+          <div class="confetti-container" aria-hidden="true"></div>
+          <div class="shadow"></div>
+        </div>
+
+        <div class="status-card">
+          <div class="status-command">
+            <span id="statusIcon">&gt;_</span>
+          </div>
+          <div>
+            <h2 id="statusText">Offline</h2>
+            <p id="statusDescription">Start Claude, then run /ClaudeSignal.</p>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span>Up time</span>
+            <strong id="durationText">0s</strong>
+          </div>
+          <div class="stat">
+            <span>Activity</span>
+            <strong id="activityText">--</strong>
+          </div>
+          <div class="stat">
+            <span>Session</span>
+            <strong id="sessionText">--</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-label="Status states">
+        <button class="state-tile" data-status="waiting_input" type="button">
+          <span class="tile-cat">⌨</span>
+          <strong>Need Input</strong>
+        </button>
+        <button class="state-tile" data-status="thinking" type="button">
+          <span class="tile-cat">...</span>
+          <strong>Thinking</strong>
+        </button>
+        <button class="state-tile" data-status="working" type="button">
+          <span class="tile-cat">✦</span>
+          <strong>Working</strong>
+        </button>
+        <button class="state-tile" data-status="session_limit" type="button">
+          <span class="tile-cat">!</span>
+          <strong>Limit Hit</strong>
+        </button>
+      </section>
+
+      <section class="info-card">
+        <div class="info-card-header">
+          <span class="live-dot"></span>
+          <h3>Session Details</h3>
+        </div>
+        <dl>
+          <div>
+            <dt>Project</dt>
+            <dd id="projectText">--</dd>
+          </div>
+          <div>
+            <dt>Started</dt>
+            <dd id="startedText">--</dd>
+          </div>
+          <div>
+            <dt>Privacy</dt>
+            <dd>Local network only</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="health-grid" aria-label="Signal health">
+        <article>
+          <span>Connection</span>
+          <strong id="healthConnection">Offline</strong>
+          <div class="sparkline"><i></i><i></i><i></i><i></i></div>
+        </article>
+        <article>
+          <span>Claude</span>
+          <strong id="runningText">Not running</strong>
+          <div class="sparkline"><i></i><i></i><i></i><i></i></div>
+        </article>
+        <article>
+          <span>Monitor</span>
+          <strong id="monitorText">Standby</strong>
+          <div class="sparkline"><i></i><i></i><i></i><i></i></div>
+        </article>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
