@@ -33,6 +33,9 @@ cargo run -- simulate --scenario error
 
 # Run a command through the monitor
 cargo run -- run -- claude "your prompt here"
+
+# Custom port
+cargo run -- --port 3004 serve
 ```
 
 ## Test
@@ -56,11 +59,7 @@ cargo test -- --test-threads=1 server_routes
 cargo clippy -- -D warnings
 ```
 
-Fix any warnings before committing. The project does not use `rustfmt` enforcement in CI, but run it manually before submitting:
-
-```bash
-cargo fmt
-```
+Fix any warnings before committing. Run `cargo fmt` before submitting.
 
 ## Project Structure
 
@@ -73,24 +72,28 @@ src/
   routes.rs          HTTP route handlers
   websocket.rs       WebSocket handler
   status.rs          Core types (ClaudeStatus, StatusSnapshot, LogEntry, ServerEvent)
-  status_store.rs    In-memory state store
+  status_store.rs    In-memory state store with async locks
   status_detector.rs Pattern-matching status detection
   log_buffer.rs      Ring buffer for recent logs
+  usage.rs           UsageSnapshot normalization from status-line JSON
+  usage_history.rs   JSONL transcript scanning and aggregation
   claude_runner.rs   PTY command execution
   attach.rs          Multi-session management
-  simulator.rs       Demo mode
+  status_line.rs     Status-line bridge (stdin -> dashboard)
+  simulator.rs       Demo mode with scenarios
   network.rs         Local IP detection
   error.rs           Custom error type
 web/
   index.html         Dashboard HTML
   styles.css         Dashboard styles + cat animations
-  app.js             Dashboard JavaScript (WebSocket client)
+  app.js             Dashboard JavaScript (WebSocket client, cat mood logic)
 tests/
   server_routes.rs   Integration tests for HTTP endpoints
   status_behavior.rs Unit tests for status, detection, buffer, store
 scripts/
-  install-claude-wrapper.sh   Installs claude wrapper + slash commands
-  dev.sh                      Development helper (if present)
+  install-claude-wrapper.sh   Installs claude wrapper + status-line bridge
+  dev.sh                      Development helper
+  capture-moods.mjs           Screenshot capture for cat moods
 ```
 
 ## Code Style
@@ -99,7 +102,7 @@ scripts/
 - No comments unless requested. Let the code speak.
 - Prefer `anyhow` for error handling in binaries, `thiserror` for library errors.
 - Use `tokio::sync::RwLock` for shared async state.
-- Keep dependencies minimal — check `Cargo.toml` before adding new crates.
+- Keep dependencies minimal -- check `Cargo.toml` before adding new crates.
 
 ## Commit Messages
 
@@ -111,9 +114,20 @@ scripts/
 
 1. Add variant to `ClaudeStatus` in `src/status.rs`
 2. Add pattern-matching rules in `src/status_detector.rs`
-3. Add status metadata (icon, label, description) in `web/app.js`
-4. Add CSS animation in `web/styles.css`
-5. Update tests in `tests/status_behavior.rs`
+3. Add status metadata (icon, label, description) in `web/app.js` (`moodMeta`, `emotionHTML`, `emotionTypes`)
+4. Add CSS animation in `web/styles.css` (keyframes + `[data-mood="..."]` rules)
+5. Add mood threshold logic in `web/app.js` (`catMoodFromState`)
+6. Update tests in `tests/status_behavior.rs`
+
+## Adding a New Cat Mood
+
+1. Add mood name to `moodMeta` in `web/app.js`
+2. Add emotion HTML in `emotionHTML`
+3. Add emotion type in `emotionTypes`
+4. Add threshold logic in `catMoodFromState()`
+5. Add mood description in `catMoodSentence()`
+6. Add CSS class `.hero-card.usage-<mood>` and `.cat-stage[data-mood="<mood>"]` rules in `styles.css`
+7. Add keyframe animations if needed
 
 ## Adding a New HTTP Route
 
@@ -127,3 +141,15 @@ scripts/
 1. Add variant to `Commands` enum in `src/cli.rs`
 2. Add handler branch in `main.rs`
 3. Update README with usage instructions
+
+## Screenshots
+
+To regenerate cat mood screenshots:
+
+```bash
+npm install playwright
+npx playwright install chromium
+node scripts/capture-moods.mjs
+```
+
+This starts the server, injects mock usage data for each mood threshold, and saves screenshots to `docs/screenshots/`.
