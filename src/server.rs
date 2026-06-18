@@ -3,12 +3,14 @@ use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::broadcast;
 
 use crate::{
-    network::local_network_ip, routes::build_router, status::ServerEvent, status_store::StatusStore,
+    network::local_network_ip, routes::build_router, status::ServerEvent,
+    status_store::StatusStore, usage::UsageStore,
 };
 
 #[derive(Clone)]
 pub struct AppState {
     pub status_store: Arc<StatusStore>,
+    pub usage_store: Arc<UsageStore>,
     pub broadcaster: broadcast::Sender<ServerEvent>,
 }
 
@@ -17,6 +19,7 @@ impl AppState {
         let (broadcaster, _) = broadcast::channel(256);
         Self {
             status_store: Arc::new(StatusStore::new(max_logs)),
+            usage_store: Arc::new(UsageStore::new()),
             broadcaster,
         }
     }

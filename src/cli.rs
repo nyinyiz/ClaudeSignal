@@ -18,6 +18,7 @@ pub struct Cli {
 #[derive(Debug, Subcommand)]
 pub enum Commands {
     Serve,
+    #[command(hide = true)]
     Attach {
         #[arg(long)]
         session_id: Option<String>,
@@ -26,11 +27,15 @@ pub enum Commands {
         #[arg(long)]
         cwd: Option<String>,
     },
+    #[command(hide = true)]
     Stop {
         #[arg(long)]
         session_id: Option<String>,
     },
+    #[command(hide = true)]
     StopAll,
+    #[command(hide = true)]
+    StatusLine,
     #[command(hide = true)]
     ServeSession {
         #[arg(long)]

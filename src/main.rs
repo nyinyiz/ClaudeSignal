@@ -5,6 +5,7 @@ use claude_signal::{
     server::{self, AppState},
     simulator,
     status::ClaudeStatus,
+    status_line,
 };
 
 #[tokio::main]
@@ -45,6 +46,10 @@ async fn main() -> anyhow::Result<()> {
             attach::stop_all()?;
             Ok(())
         }
+        Commands::StatusLine => {
+            status_line::run(cli.port)?;
+            Ok(())
+        }
         Commands::ServeSession {
             session_id,
             parent_pid,
@@ -55,7 +60,7 @@ async fn main() -> anyhow::Result<()> {
             if let Some(cwd) = cwd {
                 state
                     .status_store
-                    .add_system_log(format!("ClaudeSignal attached to {cwd}"))
+                    .add_system_log(format!("ClaudeSignal dashboard started for {cwd}"))
                     .await;
             }
             let monitor_state = state.clone();

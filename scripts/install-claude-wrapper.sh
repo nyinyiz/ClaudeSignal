@@ -5,7 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SIGNAL_BIN="${CLAUDE_SIGNAL_BIN:-"$ROOT_DIR/target/debug/claude-signal"}"
 INSTALL_DIR="${CLAUDE_SIGNAL_WRAPPER_DIR:-"$HOME/.local/bin"}"
 WRAPPER_PATH="$INSTALL_DIR/claude"
-COMMAND_DIR="${CLAUDE_SIGNAL_COMMAND_DIR:-"$HOME/.claude/commands"}"
+CLAUDE_DIR="${CLAUDE_SIGNAL_CLAUDE_DIR:-"$HOME/.claude"}"
+STATUSLINE_PATH="$CLAUDE_DIR/claude-signal-statusline.sh"
+SETTINGS_PATH="$CLAUDE_DIR/settings.json"
 
 if [[ ! -x "$SIGNAL_BIN" ]]; then
   echo "Building ClaudeSignal..."
@@ -44,44 +46,45 @@ export CLAUDE_SIGNAL_REAL_CLAUDE="$REAL_CLAUDE"
 export CLAUDE_SIGNAL_CLAUDE_PID="\$\$"
 export CLAUDE_SIGNAL_SESSION_ID="\${CLAUDE_SIGNAL_SESSION_ID:-claude-signal-\$\$-\$(date +%s)}"
 
-if [[ "\${CLAUDE_SIGNAL_BYPASS:-}" == "1" ]]; then
-  exec "$REAL_CLAUDE" "\$@"
-fi
-
-exec "$SIGNAL_BIN" run -- "$REAL_CLAUDE" "\$@"
+exec "$REAL_CLAUDE" "\$@"
 EOF
 
 chmod +x "$WRAPPER_PATH"
 
-mkdir -p "$COMMAND_DIR"
-cat > "$COMMAND_DIR/ClaudeSignal.md" <<EOF
----
-description: Show the ClaudeSignal dashboard URL
-allowed-tools: Bash
----
+mkdir -p "$CLAUDE_DIR"
+cat > "$STATUSLINE_PATH" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
 
-\`\`\`bash
-LOCAL_IP=\$(ifconfig en0 2>/dev/null | grep 'inet ' | awk '{print \$2}')
-echo "ClaudeSignal Dashboard"
-echo "  Local:  http://localhost:3000"
-echo "  Phone:  http://\${LOCAL_IP:-localhost}:3000"
-\`\`\`
+exec "$SIGNAL_BIN" status-line
 EOF
 
-cat > "$COMMAND_DIR/ClaudeSignalStop.md" <<EOF
----
-description: Stop the ClaudeSignal dashboard
-allowed-tools: Bash
----
+chmod +x "$STATUSLINE_PATH"
 
-\`\`\`bash
-"\${CLAUDE_SIGNAL_BIN:-$SIGNAL_BIN}" stop-all 2>/dev/null || true
-echo "Dashboard stopped."
-\`\`\`
-EOF
-
-cp "$COMMAND_DIR/ClaudeSignal.md" "$COMMAND_DIR/claudesignal.md" 2>/dev/null || true
-cp "$COMMAND_DIR/ClaudeSignalStop.md" "$COMMAND_DIR/claudesignalstop.md" 2>/dev/null || true
+STATUSLINE_CONFIGURED=false
+if command -v node >/dev/null 2>&1; then
+  SETTINGS_PATH="$SETTINGS_PATH" STATUSLINE_PATH="$STATUSLINE_PATH" node <<'NODE'
+const fs = require("fs");
+const settingsPath = process.env.SETTINGS_PATH;
+const statuslinePath = process.env.STATUSLINE_PATH;
+let settings = {};
+try {
+  if (fs.existsSync(settingsPath)) {
+    settings = JSON.parse(fs.readFileSync(settingsPath, "utf8"));
+  }
+} catch (error) {
+  settings = {};
+}
+settings.statusLine = {
+  type: "command",
+  command: statuslinePath,
+  refreshInterval: 5,
+};
+fs.mkdirSync(require("path").dirname(settingsPath), { recursive: true });
+fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+NODE
+  STATUSLINE_CONFIGURED=true
+fi
 
 # Add to PATH if not already there
 SHELL_PROFILE=""
@@ -105,7 +108,18 @@ echo "Done! ClaudeSignal is installed."
 echo ""
 echo "  Wrapper:  $WRAPPER_PATH"
 echo "  Claude:   $REAL_CLAUDE"
+echo "  Usage:    $STATUSLINE_PATH"
+[[ "$STATUSLINE_CONFIGURED" == "true" ]] && echo "  Settings: configured statusLine in $SETTINGS_PATH"
 [[ "$PATH_ADDED" == "true" ]] && echo "  PATH:     added to $SHELL_PROFILE"
 echo ""
+if [[ "$STATUSLINE_CONFIGURED" != "true" ]]; then
+  echo "Add this to $SETTINGS_PATH to enable live usage:"
+  echo '  "statusLine": {'
+  echo '    "type": "command",'
+  echo "    \"command\": \"$STATUSLINE_PATH\","
+  echo '    "refreshInterval": 5'
+  echo '  }'
+echo ""
+fi
 echo "Open a new terminal and run: claude \"your prompt\""
-echo "Then type /ClaudeSignal inside Claude to see the dashboard URL."
+echo "Start the dashboard separately with: $SIGNAL_BIN serve"

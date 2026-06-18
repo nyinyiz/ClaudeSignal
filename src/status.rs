@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
+use crate::usage::UsageSnapshot;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ClaudeStatus {
@@ -79,5 +81,6 @@ impl LogEntry {
 pub enum ServerEvent {
     Status(StatusSnapshot),
     Log(LogEntry),
+    Usage(UsageSnapshot),
     Heartbeat { timestamp: DateTime<Utc> },
 }

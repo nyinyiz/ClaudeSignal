@@ -105,6 +105,10 @@ pub fn attach(
     Ok(session)
 }
 
+pub fn read_attached_session(session_id: &str) -> anyhow::Result<Option<AttachedSession>> {
+    read_session(session_id)
+}
+
 pub fn stop(session_id: String) -> anyhow::Result<bool> {
     let Some(session) = read_session(&session_id)? else {
         println!("ClaudeSignal is not running for this session.");

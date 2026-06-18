@@ -9,5 +9,8 @@ pub mod server;
 pub mod simulator;
 pub mod status;
 pub mod status_detector;
+pub mod status_line;
 pub mod status_store;
+pub mod usage;
+pub mod usage_history;
 pub mod websocket;

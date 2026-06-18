@@ -7,7 +7,10 @@ use axum::{
 };
 use serde_json::json;
 
-use crate::{server::AppState, websocket::ws_handler};
+use crate::{
+    server::AppState, status::ServerEvent, usage::UsageSnapshot, usage_history,
+    websocket::ws_handler,
+};
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
@@ -17,6 +20,8 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/health", get(health))
         .route("/api/status", get(status))
         .route("/api/logs", get(logs))
+        .route("/api/usage", get(usage).post(update_usage))
+        .route("/api/usage/history", get(usage_history))
         .route("/ws", get(ws_handler))
         .with_state(state)
 }
@@ -58,4 +63,22 @@ async fn status(State(state): State<AppState>) -> Json<crate::status::StatusSnap
 
 async fn logs(State(state): State<AppState>) -> Json<serde_json::Value> {
     Json(json!({ "logs": state.status_store.logs().await }))
+}
+
+async fn usage(State(state): State<AppState>) -> Json<serde_json::Value> {
+    Json(json!({ "usage": state.usage_store.snapshot().await }))
+}
+
+async fn update_usage(
+    State(state): State<AppState>,
+    Json(payload): Json<serde_json::Value>,
+) -> Json<serde_json::Value> {
+    let snapshot = UsageSnapshot::from_status_line_json(&payload);
+    state.usage_store.set(snapshot.clone()).await;
+    let _ = state.broadcaster.send(ServerEvent::Usage(snapshot.clone()));
+    Json(json!({ "ok": true, "usage": snapshot }))
+}
+
+async fn usage_history() -> Json<usage_history::UsageHistorySnapshot> {
+    Json(usage_history::scan_default())
 }
