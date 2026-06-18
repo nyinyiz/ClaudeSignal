@@ -3,166 +3,321 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="ClaudeSignal monitors Claude Code status, mood, and local usage history."
+    />
     <title>ClaudeSignal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <main class="phone-shell">
+    <main class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <div class="mini-cat" aria-hidden="true"><span></span></div>
+          <div class="brand-mark" aria-hidden="true"><span></span></div>
           <div>
             <p class="eyebrow">Claude CLI Status</p>
             <h1>ClaudeSignal</h1>
           </div>
         </div>
-        <div id="connection" class="connection disconnected">
-          <span class="connection-dot"></span>
-          <span id="connectionText">Offline</span>
-        </div>
+        <nav class="top-actions" aria-label="Dashboard controls">
+          <label class="theme-picker">
+            <span>Theme</span>
+            <select id="themeSelect" aria-label="Theme">
+              <option value="cozy">Cozy</option>
+              <option value="matcha">Matcha</option>
+              <option value="graphite">Graphite</option>
+              <option value="ember">Ember</option>
+            </select>
+          </label>
+          <div id="connection" class="connection disconnected">
+            <span class="connection-dot"></span>
+            <span id="connectionText">Offline</span>
+          </div>
+          <button class="icon-button" type="button" aria-label="Notifications">!</button>
+          <button id="settingsOpen" class="icon-button" type="button" aria-label="Open settings" aria-haspopup="dialog">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.04.04a2.1 2.1 0 0 1-2.97 2.97l-.04-.04a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.09 1.65V21.3a2.1 2.1 0 0 1-4.2 0v-.06a1.8 1.8 0 0 0-1.09-1.65 1.8 1.8 0 0 0-1.98.36l-.04.04a2.1 2.1 0 0 1-2.97-2.97l.04-.04A1.8 1.8 0 0 0 3.84 15a1.8 1.8 0 0 0-1.65-1.09H2.1a2.1 2.1 0 0 1 0-4.2h.09a1.8 1.8 0 0 0 1.65-1.09 1.8 1.8 0 0 0-.36-1.98l-.04-.04A2.1 2.1 0 0 1 6.41 3.63l.04.04a1.8 1.8 0 0 0 1.98.36 1.8 1.8 0 0 0 1.09-1.65V2.3a2.1 2.1 0 0 1 4.2 0v.08a1.8 1.8 0 0 0 1.09 1.65 1.8 1.8 0 0 0 1.98-.36l.04-.04a2.1 2.1 0 0 1 2.97 2.97l-.04.04a1.8 1.8 0 0 0-.36 1.98 1.8 1.8 0 0 0 1.65 1.09h.09a2.1 2.1 0 0 1 0 4.2h-.09A1.8 1.8 0 0 0 19.4 15Z"></path>
+            </svg>
+          </button>
+        </nav>
       </header>
 
-      <section id="statusPanel" class="hero-card status-offline" aria-live="polite">
-        <div class="cat-scene" aria-hidden="true">
-          <div class="prompt-glyph">&gt;_</div>
-
-          <div id="emotionEmoji" class="emotion-emoji" aria-hidden="true"></div>
-
-          <div class="thought-bubble"><span></span><span></span><span></span></div>
-
-          <div class="spark spark-one"></div>
-          <div class="spark spark-two"></div>
-          <div class="spark spark-three"></div>
-          <div class="spark spark-four"></div>
-          <div class="spark spark-five"></div>
-
-          <div class="cat">
-            <div class="tail"></div>
-            <div class="body"></div>
-            <div class="belly"></div>
-            <div class="head">
-              <div class="ear ear-left"><div class="ear-inner"></div></div>
-              <div class="ear ear-right"><div class="ear-inner"></div></div>
-              <div class="stripe stripe-one"></div>
-              <div class="stripe stripe-two"></div>
-              <div class="stripe stripe-three"></div>
-              <div class="eye eye-left">
-                <div class="eye-shine"></div>
-                <div class="eye-shine-small"></div>
+      <section class="dashboard-grid" aria-label="Current Claude state">
+        <section id="statusPanel" class="hero-card usage-sleeping" aria-live="polite">
+          <div class="cat-stage" aria-hidden="true">
+            <div class="cat">
+              <div class="cat-tail"></div>
+              <div class="cat-body"></div>
+              <div class="cat-head">
+                <div class="cat-ear cat-ear-left"></div>
+                <div class="cat-ear cat-ear-right"></div>
+                <div class="cat-eye cat-eye-left"></div>
+                <div class="cat-eye cat-eye-right"></div>
+                <div class="cat-nose"></div>
+                <div class="cat-mouth"></div>
+                <div class="cat-whisker cat-whisker-left-one"></div>
+                <div class="cat-whisker cat-whisker-left-two"></div>
+                <div class="cat-whisker cat-whisker-right-one"></div>
+                <div class="cat-whisker cat-whisker-right-two"></div>
               </div>
-              <div class="eye eye-right">
-                <div class="eye-shine"></div>
-                <div class="eye-shine-small"></div>
+              <div class="cat-paw cat-paw-left"></div>
+              <div class="cat-paw cat-paw-right"></div>
+            </div>
+            <div id="emotionEmoji" class="emotion-emoji" aria-hidden="true"></div>
+          </div>
+
+          <div class="status-center">
+            <div class="status-chip">
+              <span id="statusIcon">zz</span>
+              <strong id="statusText">Sleeping</strong>
+            </div>
+            <p id="statusDescription">ClaudeSignal is waiting for local Claude Code usage history.</p>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat">
+              <span>Up time</span>
+              <strong id="durationText">0s</strong>
+            </div>
+            <div class="stat">
+              <span>Activity</span>
+              <strong id="activityText">--</strong>
+            </div>
+          </div>
+        </section>
+
+        <aside class="world-card" aria-label="World time">
+          <div class="world-header">
+            <span>World clock</span>
+            <h2>Local overlap</h2>
+          </div>
+          <div class="time-list">
+            <article>
+              <div>
+                <strong>Thailand</strong>
+                <span>ICT (UTC+7)</span>
               </div>
-              <div class="blush blush-left"></div>
-              <div class="blush blush-right"></div>
-              <div class="muzzle"></div>
-              <div class="nose"></div>
-              <div class="mouth"></div>
-              <div class="cheek-line cheek-left"></div>
-              <div class="cheek-line cheek-right"></div>
-              <div class="whisker whisker-left-one"></div>
-              <div class="whisker whisker-left-two"></div>
-              <div class="whisker whisker-right-one"></div>
-              <div class="whisker whisker-right-two"></div>
+              <b id="timeThailand">--:--</b>
+              <i class="is-day">Day</i>
+            </article>
+            <article>
+              <div>
+                <strong>UK</strong>
+                <span>GMT (UTC+0)</span>
+              </div>
+              <b id="timeUk">--:--</b>
+              <i>Night</i>
+            </article>
+            <article>
+              <div>
+                <strong>Hong Kong</strong>
+                <span>HKT (UTC+8)</span>
+              </div>
+              <b id="timeHongKong">--:--</b>
+              <i class="is-day">Day</i>
+            </article>
+            <article>
+              <div>
+                <strong>Canada</strong>
+                <span>EST (UTC-5)</span>
+              </div>
+              <b id="timeCanada">--:--</b>
+              <i>Night</i>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section id="activityPanel" class="activity-card" aria-label="Claude activity over time">
+        <div class="activity-header">
+          <div>
+            <span class="usage-label">System activity</span>
+            <h3>Activity over Time (7d)</h3>
+          </div>
+          <div class="activity-legend" aria-label="Chart legend">
+            <span><i></i> Tokens</span>
+            <span><i></i> Requests</span>
+          </div>
+        </div>
+        <div id="activityChart" class="activity-chart" role="img" aria-label="Seven day activity chart">
+          <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="tokensAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="var(--primary-2)" stop-opacity="0.34"></stop>
+                <stop offset="100%" stop-color="var(--primary-2)" stop-opacity="0"></stop>
+              </linearGradient>
+              <linearGradient id="requestsAreaGradient" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#b96618" stop-opacity="0.24"></stop>
+                <stop offset="100%" stop-color="#b96618" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <g class="activity-grid-lines">
+              <line x1="0" y1="56" x2="1000" y2="56"></line>
+              <line x1="0" y1="108" x2="1000" y2="108"></line>
+              <line x1="0" y1="160" x2="1000" y2="160"></line>
+            </g>
+            <path id="requestsArea" class="activity-area requests-area"></path>
+            <path id="tokensArea" class="activity-area tokens-area"></path>
+            <path id="requestsLine" class="activity-line requests-line"></path>
+            <path id="tokensLine" class="activity-line tokens-line"></path>
+          </svg>
+          <div id="activityDays" class="activity-days" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <section class="usage-dashboard" aria-label="Claude usage dashboard">
+        <section id="historyPanel" class="history-card history-empty" aria-label="Claude usage history">
+          <div class="usage-header">
+            <div>
+              <span class="usage-label">History</span>
+              <h3>Claude Code Usage</h3>
+              <p id="historyNote" class="usage-note">Reading local Claude Code transcripts.</p>
             </div>
-            <div class="paw paw-left"></div>
-            <div class="paw paw-right"></div>
-            <div class="prop-dumbbell">
-              <div class="db-handle"></div>
-              <div class="db-weight db-left"></div>
-              <div class="db-weight db-right"></div>
+            <span id="historyUpdated" class="usage-updated">Scanning</span>
+          </div>
+
+          <div class="history-summary">
+            <article>
+              <span>Today</span>
+              <strong id="historyTodayTokens">--</strong>
+              <p id="historyTodayMeta">--</p>
+            </article>
+            <article>
+              <span>This week</span>
+              <strong id="historyWeekTokens">--</strong>
+              <p id="historyWeekMeta">--</p>
+            </article>
+            <article>
+              <span>All time</span>
+              <strong id="historyAllTokens">--</strong>
+              <p id="historyAllMeta">--</p>
+            </article>
+          </div>
+
+          <div class="history-lists">
+            <div>
+              <h4>By model</h4>
+              <div id="historyModels" class="usage-list"></div>
             </div>
-            <div class="prop-towel"></div>
+            <div>
+              <h4>Top projects</h4>
+              <div id="historyProjects" class="usage-list project-list"></div>
+            </div>
           </div>
-          <div class="confetti-container" aria-hidden="true"></div>
-          <div class="shadow"></div>
-        </div>
+        </section>
 
-        <div class="status-card">
-          <div class="status-command">
-            <span id="statusIcon">&gt;_</span>
+        <aside class="recent-card" aria-label="Recent sessions">
+          <div class="recent-header">
+            <span>Recent activity</span>
+            <h3>Session timeline</h3>
           </div>
-          <div>
-            <h2 id="statusText">Offline</h2>
-            <p id="statusDescription">Start Claude, then run /ClaudeSignal.</p>
-          </div>
-        </div>
-
-        <div class="stats-row">
-          <div class="stat">
-            <span>Up time</span>
-            <strong id="durationText">0s</strong>
-          </div>
-          <div class="stat">
-            <span>Activity</span>
-            <strong id="activityText">--</strong>
-          </div>
-          <div class="stat">
-            <span>Session</span>
-            <strong id="sessionText">--</strong>
-          </div>
-        </div>
+          <div id="historySessions" class="session-list"></div>
+          <button class="wide-button" type="button">Explore sessions</button>
+        </aside>
       </section>
 
-      <section class="status-strip" aria-label="Status states">
-        <button class="state-tile" data-status="waiting_input" type="button">
-          <span class="tile-cat">⌨</span>
-          <strong>Need Input</strong>
-        </button>
-        <button class="state-tile" data-status="thinking" type="button">
-          <span class="tile-cat">...</span>
-          <strong>Thinking</strong>
-        </button>
-        <button class="state-tile" data-status="working" type="button">
-          <span class="tile-cat">✦</span>
-          <strong>Working</strong>
-        </button>
-        <button class="state-tile" data-status="session_limit" type="button">
-          <span class="tile-cat">!</span>
-          <strong>Limit Hit</strong>
-        </button>
-      </section>
-
-      <section class="info-card">
-        <div class="info-card-header">
-          <span class="live-dot"></span>
-          <h3>Session Details</h3>
-        </div>
-        <dl>
-          <div>
-            <dt>Project</dt>
-            <dd id="projectText">--</dd>
-          </div>
-          <div>
-            <dt>Started</dt>
-            <dd id="startedText">--</dd>
-          </div>
-          <div>
-            <dt>Privacy</dt>
-            <dd>Local network only</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section class="health-grid" aria-label="Signal health">
-        <article>
-          <span>Connection</span>
-          <strong id="healthConnection">Offline</strong>
-          <div class="sparkline"><i></i><i></i><i></i><i></i></div>
-        </article>
-        <article>
-          <span>Claude</span>
-          <strong id="runningText">Not running</strong>
-          <div class="sparkline"><i></i><i></i><i></i><i></i></div>
-        </article>
-        <article>
-          <span>Monitor</span>
-          <strong id="monitorText">Standby</strong>
-          <div class="sparkline"><i></i><i></i><i></i><i></i></div>
-        </article>
-      </section>
     </main>
+
+    <section id="settingsOverlay" class="settings-overlay" aria-hidden="true" hidden>
+      <div class="settings-shell" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <button id="settingsClose" class="settings-close" type="button" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6 6 18"></path>
+          </svg>
+        </button>
+
+        <header class="settings-hero">
+          <h2 id="settingsTitle">Settings</h2>
+          <p>Manage your dashboard preferences and system integration.</p>
+        </header>
+
+        <section class="settings-section" aria-labelledby="themeSettingsTitle">
+          <div class="settings-section-title">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3.5a8.5 8.5 0 0 0-8.5 8.5 6.5 6.5 0 0 0 6.5 6.5h1.2a1.4 1.4 0 0 1 1.3 1.9 1.4 1.4 0 0 0 1.3 1.9A8.8 8.8 0 0 0 22.5 13 9.5 9.5 0 0 0 12 3.5Z"></path>
+              <path d="M7.8 12.1h.1M9.3 8.6h.1M13.3 7.8h.1M16.5 10.5h.1"></path>
+            </svg>
+            <h3 id="themeSettingsTitle">Theme Selection</h3>
+          </div>
+
+          <div class="theme-card-grid" role="radiogroup" aria-label="Theme selection">
+            <button class="theme-card" type="button" role="radio" aria-checked="false" data-theme-choice="cozy">
+              <span class="theme-preview preview-cozy" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </span>
+              <span class="theme-card-footer">
+                <span>
+                  <strong>Cozy Warm</strong>
+                  <em>Current default</em>
+                </span>
+                <b aria-hidden="true"></b>
+              </span>
+            </button>
+
+            <button class="theme-card" type="button" role="radio" aria-checked="false" data-theme-choice="matcha">
+              <span class="theme-preview preview-matcha" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </span>
+              <span class="theme-card-footer">
+                <span>
+                  <strong>Matcha Calm</strong>
+                  <em>Green low-light</em>
+                </span>
+                <b aria-hidden="true"></b>
+              </span>
+            </button>
+
+            <button class="theme-card" type="button" role="radio" aria-checked="false" data-theme-choice="graphite">
+              <span class="theme-preview preview-graphite" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </span>
+              <span class="theme-card-footer">
+                <span>
+                  <strong>Graphite Focus</strong>
+                  <em>Quiet slate</em>
+                </span>
+                <b aria-hidden="true"></b>
+              </span>
+            </button>
+
+            <button class="theme-card" type="button" role="radio" aria-checked="false" data-theme-choice="ember">
+              <span class="theme-preview preview-ember" aria-hidden="true">
+                <i></i><i></i><i></i>
+              </span>
+              <span class="theme-card-footer">
+                <span>
+                  <strong>Ember Night</strong>
+                  <em>Warm contrast</em>
+                </span>
+                <b aria-hidden="true"></b>
+              </span>
+            </button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>
+        <strong>ClaudeSignal</strong>
+        <span>Claude CLI Status Dashboard</span>
+      </div>
+      <nav aria-label="Footer">
+        <a href="#historyPanel">Project info</a>
+        <a href="#historyPanel">Privacy settings</a>
+        <a href="#historyPanel">System logs</a>
+      </nav>
+      <p><span></span> System stable</p>
+    </footer>
+
     <script src="/app.js"></script>
   </body>
 </html>
