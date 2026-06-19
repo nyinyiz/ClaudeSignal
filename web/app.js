@@ -705,7 +705,9 @@ const COST_MILESTONES = [5, 10, 25, 50];
 
 function initBubbles() {
   startIdleBubbleRotation();
-  showBubble("Good morning! Let's code", false);
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? "Good morning! Let's code" : hour < 18 ? "Good afternoon! Let's code" : "Good evening! Let's code";
+  showBubble(greet, false);
 }
 
 function startIdleBubbleRotation() {
@@ -758,23 +760,32 @@ function checkMilestones() {
 
   const todayTokens = tokenTotal(history.today);
   const todayCost = history.today?.estimatedCostUsd || 0;
+  const currentMood = catMoodFromState().name;
+
+  // On first load, seed the milestone trackers without firing bubbles
+  if (!state.milestonesSeeded) {
+    state.lastMilestoneTokens = todayTokens;
+    state.lastMilestoneCost = todayCost;
+    state.lastMood = currentMood;
+    state.milestonesSeeded = true;
+    return;
+  }
 
   for (const milestone of TOKEN_MILESTONES) {
     if (todayTokens >= milestone && state.lastMilestoneTokens < milestone) {
-      queueMilestoneBubble(`${formatNumber(milestone)} tokens today!`);
+      queueMilestoneBubble(`${formatNumber(todayTokens)} tokens today!`);
     }
   }
   state.lastMilestoneTokens = todayTokens;
 
   for (const milestone of COST_MILESTONES) {
     if (todayCost >= milestone && state.lastMilestoneCost < milestone) {
-      queueMilestoneBubble(`That's $${milestone} today, meow`);
+      queueMilestoneBubble(`$${todayCost.toFixed(1)} spent today, meow`);
     }
   }
   state.lastMilestoneCost = todayCost;
 
-  const currentMood = catMoodFromState().name;
-  if (state.lastMood && state.lastMood !== currentMood && currentMood !== "sleeping") {
+  if (state.lastMood !== currentMood && currentMood !== "sleeping") {
     const moodReactions = {
       calm: "Feeling chill now",
       curious: "Oh, what's happening?",
