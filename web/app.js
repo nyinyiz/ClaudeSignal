@@ -15,7 +15,7 @@ const state = {
 };
 
 const THEME_KEY = "claude-signal-theme";
-const USAGE_REFRESH_INTERVAL_MS = 5000;
+const USAGE_REFRESH_INTERVAL_MS = 10000;
 const THEMES = new Set(["cozy", "matcha", "graphite", "ember"]);
 
 const moodMeta = {
