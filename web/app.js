@@ -452,8 +452,6 @@ function renderSnapshot() {
   const snapshot = state.snapshot;
   if (!snapshot) return;
 
-  $("durationText").textContent = formatDuration(currentDuration(snapshot));
-  $("activityText").textContent = relativeTime(snapshot.lastActivityAt);
   updateCatMood();
 }
 
@@ -611,21 +609,6 @@ function initCatInteractions() {
 }
 
 // === Helpers ===
-
-function currentDuration(snapshot) {
-  if (!snapshot.startedAt) return 0;
-  if (snapshot.completedAt) return snapshot.durationSeconds || 0;
-  return Math.max(0, Math.floor((Date.now() - new Date(snapshot.startedAt).getTime()) / 1000));
-}
-
-function formatDuration(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
 
 function relativeTime(value) {
   if (!value) return "--";

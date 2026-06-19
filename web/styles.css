@@ -163,8 +163,6 @@ a {
 .top-actions,
 .connection,
 .status-chip,
-.stats-row,
-.stat,
 .emotion-section h2 {
   display: flex;
   align-items: center;
@@ -1343,33 +1341,6 @@ body.settings-open {
   text-wrap: balance;
 }
 
-.stats-row {
-  position: relative;
-  z-index: 1;
-  align-self: end;
-  justify-content: center;
-  gap: 16px;
-  padding-top: 32px;
-  border-top: 1px solid var(--line-soft);
-}
-
-.stat {
-  gap: 12px;
-  min-height: 50px;
-  padding: 0 18px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(31, 27, 25, 0.7);
-}
-
-.stat strong {
-  color: var(--primary);
-  font-family: var(--mono);
-  font-size: 1.22rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .world-card {
   position: relative;
   overflow: hidden;
@@ -2309,7 +2280,6 @@ dd {
     transform-origin: center bottom;
   }
 
-  .stats-row,
   .history-summary,
   .history-lists {
     grid-template-columns: 1fr;
