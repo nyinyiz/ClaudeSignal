@@ -17,11 +17,19 @@ const state = {
 const THEME_KEY = "claude-signal-theme";
 const USAGE_REFRESH_INTERVAL_MS = 10000;
 const THEMES = new Set(["cozy", "matcha", "graphite", "ember"]);
+const MOOD_THRESHOLDS = [
+  { minTokens: 45_000_000, name: "overload", pressure: "critical" },
+  { minTokens: 25_000_000, name: "tired", pressure: "high" },
+  { minTokens: 15_000_000, name: "busy", pressure: "medium" },
+  { minTokens: 6_000_000, name: "focus", pressure: "medium" },
+  { minTokens: 1_000_000, name: "curious", pressure: "low" },
+];
 
 const moodMeta = {
   calm: [":)", "Calm"],
   curious: ["?", "Curious"],
   focus: [">_", "Focus"],
+  busy: ["//", "Busy"],
   tired: ["zz", "Tired"],
   overload: ["!", "Overload"],
   sleeping: ["zz", "Sleeping"],
@@ -33,6 +41,7 @@ const emotionHTML = {
   sleeping: '<span class="ez">z</span><span class="ez">z</span><span class="ez">z</span>',
   tired: '<span class="ez">rest</span><span class="ez">z</span><span class="ez">z</span>',
   focus: '',
+  busy: '!',
   curious: '?',
   overload: '?',
 };
@@ -43,6 +52,7 @@ const emotionTypes = {
   sleeping: "zzz",
   tired: "zzz",
   focus: null,
+  busy: "excite",
   curious: "question",
   overload: "question",
 };
@@ -511,7 +521,8 @@ function catMoodSentence(moodName) {
     calm: "The cat is calm because today's usage is light.",
     curious: "The cat is curious, but the day still looks balanced.",
     focus: "The cat is focused; usage is picking up.",
-    tired: "The cat is tired because today's usage is already heavy.",
+    busy: "The cat is busy; today is active, but still under the tired zone.",
+    tired: "The cat is tired because today's usage is now genuinely heavy.",
     overload: "The cat is overloaded; consider pacing the next session.",
     sleeping: "The cat is sleeping because there is not enough usage history yet.",
   };
@@ -520,21 +531,15 @@ function catMoodSentence(moodName) {
 
 function catMoodFromState() {
   const today = tokenTotal(state.history?.today);
-  if (!state.history || !state.history.turns) {
+  if (!state.history || !state.history.turns || today === 0) {
     return { name: "sleeping", pressure: "low" };
   }
-  if (today >= 30_000_000) {
-    return { name: "overload", pressure: "critical" };
+
+  const threshold = MOOD_THRESHOLDS.find((item) => today >= item.minTokens);
+  if (threshold) {
+    return { name: threshold.name, pressure: threshold.pressure };
   }
-  if (today >= 12_000_000) {
-    return { name: "tired", pressure: "high" };
-  }
-  if (today >= 4_000_000) {
-    return { name: "focus", pressure: "medium" };
-  }
-  if (today >= 500_000) {
-    return { name: "curious", pressure: "low" };
-  }
+
   return { name: "calm", pressure: "low" };
 }
 

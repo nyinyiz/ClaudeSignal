@@ -50,19 +50,20 @@ The top card features an animated cat whose mood changes based on today's transc
 
 | Mood | Trigger | Cat behavior |
 |------|---------|--------------|
-| **Sleeping** | No usage history yet | Eyes closed, slow tail swish |
-| **Calm** | < 500K tokens today | Relaxed breathing, gentle tail |
-| **Curious** | 500K+ tokens today | Head tilt, perked ears |
-| **Focus** | 4M+ tokens today | Narrowed eyes, tapping paw |
-| **Tired** | 12M+ tokens today | Droopy eyes, yawning mouth |
-| **Overload** | 30M+ tokens today | Wide eyes, jitter animation |
+| **Sleeping** | No usage history or 0 tokens today | Eyes closed, slow tail swish |
+| **Calm** | < 1M tokens today | Relaxed breathing, gentle tail |
+| **Curious** | 1M+ tokens today | Head tilt, perked ears |
+| **Focus** | 6M+ tokens today | Narrowed eyes, tapping paw |
+| **Busy** | 15M+ tokens today | Alert ears, active paw, brighter glow |
+| **Tired** | 25M+ tokens today | Droopy eyes, yawning mouth |
+| **Overload** | 45M+ tokens today | Wide eyes, jitter animation |
 
 Example briefing:
 
 ```text
 Good evening. You used 14M tokens today across 186 turns ($13.3).
 That's 13% of this week and 1.6% of all-time usage.
-The cat is tired because today's usage is already heavy.
+The cat is focused; usage is picking up.
 ```
 
 The cat also responds to interaction: mouse movement makes its eyes follow your cursor, and clicking triggers a playful pounce animation.

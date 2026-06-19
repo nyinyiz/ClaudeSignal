@@ -732,6 +732,17 @@ body.settings-open {
   --cat-fur-end: #f6ab54;
 }
 
+.hero-card.usage-busy {
+  --mood-accent: #ffcf70;
+  --mood-accent-2: #7ce7b2;
+  --mood-glow: rgba(255, 207, 112, 0.14);
+  --mood-glow-soft: rgba(124, 231, 178, 0.07);
+  --mood-badge-bg: rgba(255, 207, 112, 0.12);
+  --cat-fur-start: #ffddb1;
+  --cat-fur-end: #ffb85c;
+  --cat-ear-inner: rgba(124, 231, 178, 0.34);
+}
+
 .hero-card.usage-tired {
   --mood-accent: #ffb95a;
   --mood-accent-2: #ffd7a9;
@@ -1000,6 +1011,10 @@ body.settings-open {
   animation: paw-tap 0.7s ease-in-out infinite;
 }
 
+.cat-stage[data-mood="busy"] .cat-paw-left {
+  animation: paw-tap 0.55s ease-in-out infinite;
+}
+
 .cat-stage[data-mood="curious"] .cat-head {
   transform: translate(var(--look-x, 0), var(--look-y, 0)) rotate(-4deg);
 }
@@ -1021,6 +1036,32 @@ body.settings-open {
   width: 20px;
   height: 3px;
   border-bottom-width: 3px;
+}
+
+.cat-stage[data-mood="busy"] .cat-head {
+  transform: translate(var(--look-x, 0), calc(var(--look-y, 0) - 3px)) rotate(-2deg);
+}
+
+.cat-stage[data-mood="busy"] .cat-ear-left {
+  transform: rotate(34deg) translate(-1px, -3px);
+}
+
+.cat-stage[data-mood="busy"] .cat-ear-right {
+  transform: rotate(56deg) translate(1px, -3px);
+}
+
+.cat-stage[data-mood="busy"] .cat-eye {
+  top: 56px;
+  height: 22px;
+  border-radius: 999px 999px 10px 10px;
+}
+
+.cat-stage[data-mood="busy"] .cat-mouth {
+  width: 17px;
+  height: 13px;
+  border: 3px solid #5e4427;
+  border-radius: 999px;
+  background: rgba(52, 47, 45, 0.7);
 }
 
 .cat-stage[data-mood="tired"] .cat-eye {
