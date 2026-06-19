@@ -134,9 +134,16 @@
             <span class="usage-label">System activity</span>
             <h3 id="activityTitle">Activity over Time (7d)</h3>
           </div>
-          <div class="activity-toggle" role="tablist" aria-label="Chart view">
-            <button id="chartTabTokens" class="activity-tab is-active" role="tab" aria-selected="true" type="button">Tokens</button>
-            <button id="chartTabCost" class="activity-tab" role="tab" aria-selected="false" type="button">Cost</button>
+          <div class="activity-controls">
+            <div class="activity-toggle" role="tablist" aria-label="Chart view">
+              <button id="chartTabTokens" class="activity-tab is-active" role="tab" aria-selected="true" type="button">Tokens</button>
+              <button id="chartTabCost" class="activity-tab" role="tab" aria-selected="false" type="button">Cost</button>
+            </div>
+            <div class="activity-toggle" role="tablist" aria-label="Time range">
+              <button id="rangeTab7d" class="activity-tab is-active" role="tab" aria-selected="true" type="button">7d</button>
+              <button id="rangeTab4w" class="activity-tab" role="tab" aria-selected="false" type="button">4w</button>
+              <button id="rangeTab6m" class="activity-tab" role="tab" aria-selected="false" type="button">6m</button>
+            </div>
           </div>
         </div>
         <div id="activityChart" class="activity-chart" role="img" aria-label="Seven day activity chart">

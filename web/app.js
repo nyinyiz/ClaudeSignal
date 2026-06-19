@@ -13,6 +13,7 @@ const state = {
   catPlayTimeout: null,
   settingsTrigger: null,
   chartView: "tokens",
+  chartRange: "7d",
   bubbleIdleTimer: null,
   bubbleMilestoneTimer: null,
   bubbleIdleIndex: 0,
@@ -324,7 +325,7 @@ function renderHistory() {
   renderHistoryTotals("historyToday", history.today);
   renderHistoryTotals("historyWeek", history.week);
   renderHistoryTotals("historyAll", history.allTime);
-  renderActivityChart(history.dailyActivity || []);
+  renderActivityChart(getActivityRows());
   renderUsageRows("historyModels", history.byModel || [], "model");
   renderUsageRows("historyProjects", history.topProjects || [], "project");
   renderSessionRows(history.recentSessions || []);
@@ -386,8 +387,9 @@ function renderActivityChart(rows) {
     const requestValues = visible.map((row) => row.totals?.turns || 0);
     const maxTokens = Math.max(...tokenValues, 1);
     const maxRequests = Math.max(...requestValues, 1);
-    const tokenPoints = tokenValues.map((value, index) => chartPoint(index, value, maxTokens, 30, 176));
-    const requestPoints = requestValues.map((value, index) => chartPoint(index, value, maxRequests, 92, 190));
+    const count = visible.length;
+    const tokenPoints = tokenValues.map((value, index) => chartPoint(index, value, maxTokens, 30, 176, count));
+    const requestPoints = requestValues.map((value, index) => chartPoint(index, value, maxRequests, 92, 190, count));
 
     $("tokensLine")?.setAttribute("d", smoothPath(tokenPoints));
     $("requestsLine")?.setAttribute("d", smoothPath(requestPoints));
@@ -402,13 +404,14 @@ function renderActivityChart(rows) {
 }
 
 function normalizeActivityRows(rows) {
-  if (rows.length >= 7) return rows.slice(-7);
+  if (rows.length > 0) return rows;
   const labels = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-  return labels.map((label, index) => rows[index] || { label, totals: {} });
+  return labels.map((label) => ({ label, totals: {} }));
 }
 
-function chartPoint(index, value, maxValue, top, bottom) {
-  const x = index * (1000 / 6);
+function chartPoint(index, value, maxValue, top, bottom, count) {
+  const segments = Math.max(count - 1, 1);
+  const x = index * (1000 / segments);
   const ratio = maxValue === 0 ? 0 : value / maxValue;
   const y = bottom - ratio * (bottom - top);
   return { x, y };
@@ -624,10 +627,12 @@ function initCatInteractions() {
 function initChartToggle() {
   const tokensTab = $("chartTabTokens");
   const costTab = $("chartTabCost");
-  if (!tokensTab || !costTab) return;
+  if (tokensTab) tokensTab.addEventListener("click", () => setChartView("tokens"));
+  if (costTab) costTab.addEventListener("click", () => setChartView("cost"));
 
-  tokensTab.addEventListener("click", () => setChartView("tokens"));
-  costTab.addEventListener("click", () => setChartView("cost"));
+  $("rangeTab7d")?.addEventListener("click", () => setChartRange("7d"));
+  $("rangeTab4w")?.addEventListener("click", () => setChartRange("4w"));
+  $("rangeTab6m")?.addEventListener("click", () => setChartRange("6m"));
 }
 
 function setChartView(view) {
@@ -636,11 +641,43 @@ function setChartView(view) {
   $("chartTabCost")?.classList.toggle("is-active", view === "cost");
   $("chartTabTokens")?.setAttribute("aria-selected", String(view === "tokens"));
   $("chartTabCost")?.setAttribute("aria-selected", String(view === "cost"));
+  updateChartTitle();
+  rerenderChart();
+}
+
+function setChartRange(range) {
+  state.chartRange = range;
+  ["7d", "4w", "6m"].forEach((r) => {
+    const tab = $(`rangeTab${r}`);
+    if (tab) {
+      tab.classList.toggle("is-active", r === range);
+      tab.setAttribute("aria-selected", String(r === range));
+    }
+  });
+  updateChartTitle();
+  rerenderChart();
+}
+
+function updateChartTitle() {
   const title = $("activityTitle");
-  if (title) title.textContent = view === "cost" ? "Daily Cost (7d)" : "Activity over Time (7d)";
-  if (state.history?.dailyActivity) {
-    renderActivityChart(state.history.dailyActivity);
-  }
+  if (!title) return;
+  const rangeLabels = { "7d": "7d", "4w": "4 weeks", "6m": "6 months" };
+  const rangeLabel = rangeLabels[state.chartRange] || "7d";
+  title.textContent = state.chartView === "cost"
+    ? `Daily Cost (${rangeLabel})`
+    : `Activity over Time (${rangeLabel})`;
+}
+
+function getActivityRows() {
+  const history = state.history;
+  if (!history) return [];
+  if (state.chartRange === "4w") return history.weeklyActivity || [];
+  if (state.chartRange === "6m") return history.monthlyActivity || [];
+  return history.dailyActivity || [];
+}
+
+function rerenderChart() {
+  renderActivityChart(getActivityRows());
 }
 
 function renderCostChart(rows) {
@@ -648,8 +685,9 @@ function renderCostChart(rows) {
   const costValues = visible.map((row) => row.totals?.estimatedCostUsd || 0);
   const maxCost = Math.max(...costValues, 0.01);
 
-  const barWidth = 60;
-  const gap = 1000 / 7;
+  const count = visible.length || 7;
+  const gap = 1000 / count;
+  const barWidth = Math.min(60, gap * 0.7);
   const top = 30;
   const bottom = 208;
 

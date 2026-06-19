@@ -64,6 +64,8 @@ pub struct UsageHistorySnapshot {
     pub top_projects: Vec<ProjectUsage>,
     pub recent_sessions: Vec<RecentSession>,
     pub daily_activity: Vec<DailyActivity>,
+    pub weekly_activity: Vec<DailyActivity>,
+    pub monthly_activity: Vec<DailyActivity>,
 }
 
 #[derive(Debug, Clone)]
@@ -216,6 +218,28 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
             (date, UsageTotals::default())
         })
         .collect::<BTreeMap<_, _>>();
+    // Weekly: last 4 weeks, keyed by week-start (Monday)
+    let mut weekly_activity: BTreeMap<chrono::NaiveDate, UsageTotals> = (0..4)
+        .rev()
+        .map(|offset| {
+            let ws = week_start - chrono::Duration::weeks(offset);
+            (ws, UsageTotals::default())
+        })
+        .collect();
+    // Monthly: last 6 months, keyed by first day of month
+    let mut monthly_activity: BTreeMap<chrono::NaiveDate, UsageTotals> = (0..6)
+        .rev()
+        .filter_map(|offset| {
+            let m = if today.month() as i32 - offset > 0 {
+                chrono::NaiveDate::from_ymd_opt(today.year(), (today.month() as i32 - offset) as u32, 1)
+            } else {
+                let year_offset = (offset - today.month() as i32) / 12 + 1;
+                let month = 12 - ((offset - today.month() as i32) % 12);
+                chrono::NaiveDate::from_ymd_opt(today.year() - year_offset, month as u32, 1)
+            };
+            m.map(|date| (date, UsageTotals::default()))
+        })
+        .collect();
     let mut sessions: HashMap<String, SessionAggregate> = HashMap::new();
     let mut seen_turns = 0;
 
@@ -241,6 +265,20 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         }
         if let Some(totals) = turn_date.and_then(|date| daily_activity.get_mut(&date)) {
             add_turn(totals, turn);
+        }
+        if let Some(date) = turn_date {
+            let turn_week_start = date
+                - chrono::Duration::days(date.weekday().num_days_from_monday() as i64);
+            if let Some(totals) = weekly_activity.get_mut(&turn_week_start) {
+                add_turn(totals, turn);
+            }
+            let turn_month_start =
+                chrono::NaiveDate::from_ymd_opt(date.year(), date.month(), 1);
+            if let Some(ms) = turn_month_start {
+                if let Some(totals) = monthly_activity.get_mut(&ms) {
+                    add_turn(totals, turn);
+                }
+            }
         }
 
         let session = sessions
@@ -297,6 +335,26 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         })
         .collect();
 
+    let weekly_activity = weekly_activity
+        .into_iter()
+        .map(|(date, totals)| {
+            DailyActivity {
+                date: date.to_string(),
+                label: format!("{}", date.format("%b %d")),
+                totals,
+            }
+        })
+        .collect();
+
+    let monthly_activity = monthly_activity
+        .into_iter()
+        .map(|(date, totals)| DailyActivity {
+            date: date.to_string(),
+            label: date.format("%b").to_string().to_uppercase(),
+            totals,
+        })
+        .collect();
+
     UsageHistorySnapshot {
         generated_at: Utc::now(),
         transcript_files,
@@ -308,6 +366,8 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         top_projects,
         recent_sessions,
         daily_activity,
+        weekly_activity,
+        monthly_activity,
     }
 }
 
