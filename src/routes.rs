@@ -80,5 +80,8 @@ async fn update_usage(
 }
 
 async fn usage_history() -> Json<usage_history::UsageHistorySnapshot> {
-    Json(usage_history::scan_default())
+    let snapshot = tokio::task::spawn_blocking(usage_history::scan_default)
+        .await
+        .expect("usage history scan panicked");
+    Json(snapshot)
 }

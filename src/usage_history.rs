@@ -92,12 +92,14 @@ pub fn scan_default() -> UsageHistorySnapshot {
         collect_jsonl_files(&dir, &mut transcript_files);
     }
     transcript_files.sort();
+    scan_paths(&transcript_files)
+}
 
+pub fn scan_paths(transcript_files: &[PathBuf]) -> UsageHistorySnapshot {
     let mut turns = Vec::new();
-    for file in &transcript_files {
+    for file in transcript_files {
         turns.extend(parse_jsonl_file(file));
     }
-
     build_snapshot(transcript_files.len(), turns)
 }
 

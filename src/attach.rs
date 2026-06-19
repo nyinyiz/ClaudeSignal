@@ -84,9 +84,12 @@ pub fn attach(
         .stderr(Stdio::from(log));
 
     #[cfg(unix)]
+    // SAFETY: setsid() is async-signal-safe and only affects the forked child.
     unsafe {
         command.pre_exec(|| {
-            libc::setsid();
+            if libc::setsid() == -1 {
+                return Err(std::io::Error::last_os_error());
+            }
             Ok(())
         });
     }
@@ -194,11 +197,19 @@ fn port_is_open(port: u16) -> bool {
 }
 
 fn pid_exists(pid: i32) -> bool {
+    // SAFETY: signal 0 performs an existence check without sending a signal.
     unsafe { libc::kill(pid, 0) == 0 }
 }
 
 fn stop_session(session: &AttachedSession) -> bool {
     if let Some(pid) = session.worker_pid {
+        if !pid_is_claude_signal(pid as i32) {
+            println!(
+                "PID {} is no longer a ClaudeSignal process (may have been recycled). Skipping kill.",
+                pid
+            );
+            return false;
+        }
         return stop_pid(pid as i32);
     }
 
@@ -211,8 +222,53 @@ fn stop_session(session: &AttachedSession) -> bool {
     false
 }
 
+fn pid_is_claude_signal(pid: i32) -> bool {
+    if !pid_exists(pid) {
+        return false;
+    }
+    let Ok(current_exe) = std::env::current_exe() else {
+        return false;
+    };
+    let current_name = current_exe
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("");
+    if current_name.is_empty() {
+        return false;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let mut buf = vec![0u8; libc::PROC_PIDPATHINFO_MAXSIZE as usize];
+        // SAFETY: buf is large enough for PROC_PIDPATHINFO_MAXSIZE and pid is a valid i32.
+        let len = unsafe {
+            libc::proc_pidpath(pid, buf.as_mut_ptr() as *mut libc::c_void, buf.len() as u32)
+        };
+        if len <= 0 {
+            return false;
+        }
+        let path = String::from_utf8_lossy(&buf[..len as usize]);
+        path.contains(current_name)
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        let exe_link = format!("/proc/{pid}/exe");
+        if let Ok(target) = std::fs::read_link(exe_link) {
+            let target_name = target.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            return target_name == current_name;
+        }
+        false
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = current_name;
+        false
+    }
+}
+
 fn stop_pid(pid: i32) -> bool {
     #[cfg(unix)]
+    // SAFETY: pid is verified to be a ClaudeSignal process before this call.
+    // Negative pid sends signal to the process group.
     unsafe {
         let group_result = libc::kill(-pid, libc::SIGTERM);
         let pid_result = libc::kill(pid, libc::SIGTERM);

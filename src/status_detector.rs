@@ -9,16 +9,18 @@ const SESSION_LIMIT_PATTERNS: &[&str] = &[
     "limit reached",
     "try again later",
     "too many requests",
-    "quota",
+    "quota exceeded",
+    "quota reached",
 ];
 
 const WAITING_INPUT_PATTERNS: &[&str] = &[
     "continue?",
     "yes/no",
+    "[y/n]",
     "press enter",
     "waiting for input",
     "do you want to",
-    "confirm",
+    "confirm?",
 ];
 
 pub fn detect_status_from_line(line: &str) -> Option<ClaudeStatus> {

@@ -9,6 +9,7 @@ pub struct LogBuffer {
 }
 
 impl LogBuffer {
+    /// Create a new buffer. Capacity is clamped to a minimum of 1.
     pub fn new(max_len: usize) -> Self {
         Self {
             max_len: max_len.max(1),

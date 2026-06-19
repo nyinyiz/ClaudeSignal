@@ -226,6 +226,12 @@ pub struct UsageStore {
     snapshot: RwLock<Option<UsageSnapshot>>,
 }
 
+impl Default for UsageStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl UsageStore {
     pub fn new() -> Self {
         Self {

@@ -252,6 +252,19 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for module-level details.
 
 See [API.md](API.md) for request and response schemas.
 
+## Development
+
+```bash
+# Run tests
+cargo test
+
+# Run clippy
+cargo clippy
+
+# Dev server with auto-reload (requires cargo-watch)
+./scripts/dev.sh
+```
+
 ## Tech Stack
 
 - **Rust**: single binary
@@ -271,6 +284,9 @@ ClaudeSignal is local-first:
 - No external API calls for usage data
 - Transcript-derived data is read locally
 - Runtime state is kept in memory
+- CLI arguments are redacted from logs and broadcasts — prompts are never exposed
+- Session IDs are sanitized before touching the filesystem
+- Process identity is verified before sending stop signals to prevent stale-PID kills
 
 The server binds to `0.0.0.0` so other devices on your local network can open the dashboard.
 
@@ -308,11 +324,12 @@ See [SECURITY.md](SECURITY.md) for the threat model and mitigations.
 
 ## Known Limitations
 
-- No authentication yet
+- No authentication or origin validation on WebSocket/HTTP endpoints
 - Cost is estimated from local token counts and known pricing
 - Plan-limit percentages are only available when Claude exposes them locally
 - Transcript formats may change over time
 - Usage history depends on files present on this Mac
+- World clock cities are hardcoded (Thailand, UK, Hong Kong, Canada)
 
 ## Contributing
 

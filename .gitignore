@@ -3,3 +3,4 @@
 /.vscode
 .DS_Store
 /tools/claude-usage/
+CODE_REVIEW_VERIFICATION.md

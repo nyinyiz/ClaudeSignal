@@ -49,6 +49,40 @@ fn status_detector_prioritizes_session_limit_and_waiting_input_patterns() {
 }
 
 #[test]
+fn status_detector_does_not_false_positive_on_discussion_text() {
+    // "confirm" without trailing "?" should not trigger WaitingInput
+    assert_eq!(
+        detect_status_from_line("I can confirm the deployment succeeded"),
+        None
+    );
+    // "quota" alone should not trigger SessionLimit
+    assert_eq!(
+        detect_status_from_line("Let me check the API quota configuration"),
+        None
+    );
+    // "rate limit" in code discussion should still trigger (acceptable trade-off)
+    assert_eq!(
+        detect_status_from_line("Rate limit exceeded"),
+        Some(ClaudeStatus::SessionLimit)
+    );
+    // "confirm?" should trigger
+    assert_eq!(
+        detect_status_from_line("Please confirm?"),
+        Some(ClaudeStatus::WaitingInput)
+    );
+    // "[y/n]" should trigger
+    assert_eq!(
+        detect_status_from_line("Proceed with changes? [y/n]"),
+        Some(ClaudeStatus::WaitingInput)
+    );
+    // "quota exceeded" should trigger
+    assert_eq!(
+        detect_status_from_line("API quota exceeded for this session"),
+        Some(ClaudeStatus::SessionLimit)
+    );
+}
+
+#[test]
 fn log_buffer_keeps_only_the_most_recent_lines() {
     let mut buffer = LogBuffer::new(2);
     buffer.push(LogEntry::system("one"));

@@ -101,20 +101,32 @@ fn run_command_in_pty(
     let output_thread = thread::spawn(move || {
         let mut stdout = std::io::stdout();
         let mut buffer = [0_u8; 8192];
+        let mut last_broadcast = std::time::Instant::now();
+        let throttle = Duration::from_millis(150);
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => break,
                 Ok(n) => {
                     let _ = stdout.write_all(&buffer[..n]);
                     let _ = stdout.flush();
+                    let now = std::time::Instant::now();
                     output_handle.block_on(async {
                         output_state.status_store.touch_activity().await;
-                        broadcast_status(&output_state).await;
                     });
+                    if now.duration_since(last_broadcast) >= throttle {
+                        output_handle.block_on(async {
+                            broadcast_status(&output_state).await;
+                        });
+                        last_broadcast = now;
+                    }
                 }
                 Err(_) => break,
             }
         }
+        // Final broadcast to ensure clients see the last state.
+        output_handle.block_on(async {
+            broadcast_status(&output_state).await;
+        });
     });
 
     let status = child.wait()?;
@@ -147,9 +159,15 @@ async fn broadcast_status(state: &AppState) {
 }
 
 fn format_launch_message(program: &str, args: &[String]) -> String {
-    let mut command = vec![shell_quote(program)];
-    command.extend(args.iter().map(|arg| shell_quote(arg)));
-    format!("Launching Claude command: {}", command.join(" "))
+    if args.is_empty() {
+        format!("Launching Claude command: {}", shell_quote(program))
+    } else {
+        format!(
+            "Launching Claude command: {} [{} arg(s)]",
+            shell_quote(program),
+            args.len()
+        )
+    }
 }
 
 fn shell_quote(value: &str) -> String {
@@ -168,12 +186,20 @@ mod tests {
     use super::format_launch_message;
 
     #[test]
-    fn launch_message_quotes_prompt_arguments() {
+    fn launch_message_redacts_arguments() {
         let args = vec!["summarize this repo".to_string()];
 
         assert_eq!(
             format_launch_message("claude", &args),
-            "Launching Claude command: claude \"summarize this repo\""
+            "Launching Claude command: claude [1 arg(s)]"
+        );
+    }
+
+    #[test]
+    fn launch_message_no_args() {
+        assert_eq!(
+            format_launch_message("claude", &[]),
+            "Launching Claude command: claude"
         );
     }
 }
