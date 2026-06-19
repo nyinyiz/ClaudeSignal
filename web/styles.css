@@ -1603,25 +1603,73 @@ body.settings-open {
 
 .usage-countdown {
   display: inline-flex;
+  position: relative;
   align-items: center;
-  min-height: 28px;
-  padding: 0 12px;
-  border: 1px solid color-mix(in srgb, var(--line) 84%, var(--faint));
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, var(--faint));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--surface) 88%, transparent) 0 54%, transparent 55%),
+    color-mix(in srgb, var(--surface) 64%, transparent);
   color: var(--primary);
   font-family: var(--mono);
-  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--faint) 14%, transparent);
+}
+
+.usage-countdown svg {
+  position: absolute;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.countdown-track,
+.countdown-ring {
+  fill: none;
+  stroke-width: 3;
+}
+
+.countdown-track {
+  stroke: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.countdown-ring {
+  stroke: var(--primary-2);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.28s ease, stroke 0.2s ease;
+}
+
+.countdown-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  color: var(--primary);
   line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
+}
+
+.countdown-value b {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.countdown-value small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
 }
 
 .usage-countdown.is-refreshing {
   border-color: color-mix(in srgb, var(--primary-2) 54%, var(--line));
-  color: var(--primary-2);
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--primary-2) 10%, var(--surface)) 0 54%, transparent 55%),
+    color-mix(in srgb, var(--surface) 64%, transparent);
   animation: refreshPulse 0.9s ease-in-out infinite alternate;
 }
 

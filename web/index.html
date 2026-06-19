@@ -183,7 +183,13 @@
             </div>
             <div class="usage-refresh" aria-label="Usage refresh status">
               <span id="historyUpdated" class="usage-updated">Scanning</span>
-              <span id="historyCountdown" class="usage-countdown">Next scan 5s</span>
+              <span id="historyCountdown" class="usage-countdown" aria-label="Next usage scan in 5 seconds">
+                <svg viewBox="0 0 36 36" aria-hidden="true">
+                  <circle class="countdown-track" cx="18" cy="18" r="15.5"></circle>
+                  <circle id="historyCountdownRing" class="countdown-ring" cx="18" cy="18" r="15.5" pathLength="100"></circle>
+                </svg>
+                <span class="countdown-value"><b id="historyCountdownValue">5</b><small>s</small></span>
+              </span>
             </div>
           </div>
 

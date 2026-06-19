@@ -314,22 +314,32 @@ function renderHistory() {
 function renderRefreshCountdown() {
   const countdown = $("historyCountdown");
   if (!countdown) return;
+  const value = $("historyCountdownValue");
+  const ring = $("historyCountdownRing");
+  const totalSeconds = Math.round(USAGE_REFRESH_INTERVAL_MS / 1000);
 
   if (state.historyFetchInFlight) {
-    countdown.textContent = "Refreshing";
+    if (value) value.textContent = "0";
+    if (ring) ring.style.strokeDashoffset = "0";
+    countdown.setAttribute("aria-label", "Refreshing usage data");
     countdown.classList.add("is-refreshing");
     return;
   }
 
   countdown.classList.remove("is-refreshing");
   if (!state.nextHistoryRefreshAt) {
-    countdown.textContent = `Next scan ${Math.round(USAGE_REFRESH_INTERVAL_MS / 1000)}s`;
+    if (value) value.textContent = String(totalSeconds);
+    if (ring) ring.style.strokeDashoffset = "0";
+    countdown.setAttribute("aria-label", `Next usage scan in ${totalSeconds} seconds`);
     return;
   }
 
   const remainingMs = Math.max(0, state.nextHistoryRefreshAt - Date.now());
   const remainingSeconds = Math.ceil(remainingMs / 1000);
-  countdown.textContent = `Next scan ${remainingSeconds}s`;
+  const elapsedRatio = Math.min(1, Math.max(0, 1 - remainingMs / USAGE_REFRESH_INTERVAL_MS));
+  if (value) value.textContent = String(remainingSeconds);
+  if (ring) ring.style.strokeDashoffset = String(Math.round(elapsedRatio * 100));
+  countdown.setAttribute("aria-label", `Next usage scan in ${remainingSeconds} seconds`);
 }
 
 function renderHistoryTotals(prefix, totals) {
