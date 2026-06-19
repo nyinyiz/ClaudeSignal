@@ -690,6 +690,116 @@ body.settings-open {
   transition: background 0.35s ease;
 }
 
+.mood-aura {
+  position: absolute;
+  z-index: 0;
+  inset: 34px 48px 245px;
+  pointer-events: none;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--mood-accent-2) 78%, var(--text));
+  font-family: var(--mono);
+  font-size: clamp(0.8rem, 1.1vw, 1.08rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.42;
+  mask-image: radial-gradient(circle at 50% 55%, #000 0 34%, rgba(0, 0, 0, 0.42) 58%, transparent 82%);
+}
+
+.mood-aura span {
+  position: absolute;
+  display: inline-flex;
+  min-width: 3ch;
+  opacity: 0.24;
+  text-shadow: 0 0 18px color-mix(in srgb, var(--mood-accent) 48%, transparent);
+  animation: aura-drift 11s ease-in-out infinite;
+}
+
+.mood-aura span:nth-child(1) {
+  left: 13%;
+  top: 22%;
+  animation-delay: -1.2s;
+}
+
+.mood-aura span:nth-child(2) {
+  left: 30%;
+  top: 10%;
+  animation-delay: -5.4s;
+}
+
+.mood-aura span:nth-child(3) {
+  right: 23%;
+  top: 18%;
+  animation-delay: -2.8s;
+}
+
+.mood-aura span:nth-child(4) {
+  right: 10%;
+  top: 43%;
+  animation-delay: -7.1s;
+}
+
+.mood-aura span:nth-child(5) {
+  left: 21%;
+  bottom: 28%;
+  animation-delay: -3.8s;
+}
+
+.mood-aura span:nth-child(6) {
+  left: 47%;
+  bottom: 16%;
+  animation-delay: -8.2s;
+}
+
+.mood-aura span:nth-child(7) {
+  right: 24%;
+  bottom: 28%;
+  animation-delay: -4.7s;
+}
+
+.mood-aura span:nth-child(8) {
+  left: 7%;
+  top: 50%;
+  animation-delay: -9.3s;
+}
+
+.mood-aura span:nth-child(9) {
+  right: 42%;
+  top: 36%;
+  animation-delay: -6.2s;
+}
+
+.mood-aura[data-mood="sleeping"],
+.mood-aura[data-mood="calm"],
+.mood-aura[data-mood="tired"] {
+  opacity: 0.28;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.mood-aura[data-mood="focus"] span {
+  opacity: 0.34;
+  animation-name: aura-code-rise;
+  animation-duration: 8.5s;
+}
+
+.mood-aura[data-mood="busy"] span {
+  opacity: 0.34;
+  animation-name: aura-terminal-pulse;
+  animation-duration: 7s;
+}
+
+.mood-aura[data-mood="overload"] {
+  opacity: 0.5;
+  color: var(--mood-accent);
+}
+
+.mood-aura[data-mood="overload"] span {
+  opacity: 0.38;
+  animation-name: aura-alert-jitter;
+  animation-duration: 1.4s;
+}
+
 .hero-card.usage-sleeping {
   --mood-accent: #9da9c7;
   --mood-accent-2: #d5ddf2;
@@ -2335,6 +2445,65 @@ dd {
   }
 }
 
+@keyframes aura-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(10px, -12px, 0);
+  }
+}
+
+@keyframes aura-code-rise {
+  0% {
+    opacity: 0.08;
+    transform: translate3d(0, 18px, 0);
+  }
+
+  45% {
+    opacity: 0.42;
+  }
+
+  100% {
+    opacity: 0.08;
+    transform: translate3d(14px, -24px, 0);
+  }
+}
+
+@keyframes aura-terminal-pulse {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: translate3d(0, 0, 0) scale(0.98);
+  }
+
+  50% {
+    opacity: 0.46;
+    transform: translate3d(8px, -8px, 0) scale(1.02);
+  }
+}
+
+@keyframes aura-alert-jitter {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  25% {
+    transform: translate3d(3px, -2px, 0);
+  }
+
+  50% {
+    transform: translate3d(-2px, 2px, 0);
+  }
+
+  75% {
+    transform: translate3d(2px, 1px, 0);
+  }
+}
+
 @keyframes zzz-float {
   0%,
   100% {
@@ -2345,5 +2514,11 @@ dd {
   50% {
     opacity: 1;
     transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mood-aura span {
+    animation: none;
   }
 }

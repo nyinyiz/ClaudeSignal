@@ -57,6 +57,16 @@ const emotionTypes = {
   overload: "question",
 };
 
+const moodAuraGlyphs = {
+  sleeping: ["z", "moon", "z", "...", "sleep", "z", "moon", "...", "z"],
+  calm: ["dot", "breathe", "dot", "~", "rest", "dot", "~", "soft", "dot"],
+  curious: ["?", "look", "?", "!", "hmm", "?", "...", "why", "?"],
+  focus: ["0101", "fn()", "</>", "1010", "git", "const", "0110", "{ }", "&&"],
+  busy: ["> run", "build", "&&", "ship", "test", "git", "$", "loop", "ok"],
+  tired: ["rest", "z", "...", "pause", "z", "slow", "...", "zz", "rest"],
+  overload: ["!", "WARN", "!!!", "429", "HOT", "!!", "LIMIT", "X", "!"],
+};
+
 const $ = (id) => document.getElementById(id);
 
 async function boot() {
@@ -480,6 +490,18 @@ function updateCatMood() {
   $("statusText").textContent = meta[1];
   $("statusDescription").textContent = catBriefing(mood);
   setEmotionEmoji(mood.name);
+  setMoodAura(mood.name);
+}
+
+function setMoodAura(moodName) {
+  const aura = $("moodAura");
+  if (!aura) return;
+
+  const glyphs = moodAuraGlyphs[moodName] || moodAuraGlyphs.calm;
+  aura.dataset.mood = moodName;
+  aura.querySelectorAll("span").forEach((node, index) => {
+    node.textContent = glyphs[index % glyphs.length];
+  });
 }
 
 function catBriefing(mood) {
