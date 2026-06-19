@@ -27,20 +27,10 @@
           </div>
         </div>
         <nav class="top-actions" aria-label="Dashboard controls">
-          <label class="theme-picker">
-            <span>Theme</span>
-            <select id="themeSelect" aria-label="Theme">
-              <option value="cozy">Cozy</option>
-              <option value="matcha">Matcha</option>
-              <option value="graphite">Graphite</option>
-              <option value="ember">Ember</option>
-            </select>
-          </label>
           <div id="connection" class="connection disconnected">
             <span class="connection-dot"></span>
             <span id="connectionText">Offline</span>
           </div>
-          <button class="icon-button" type="button" aria-label="Notifications">!</button>
           <button id="settingsOpen" class="icon-button" type="button" aria-label="Open settings" aria-haspopup="dialog">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
@@ -84,6 +74,8 @@
             </div>
             <div id="emotionEmoji" class="emotion-emoji" aria-hidden="true"></div>
           </div>
+
+          <div id="catBubble" class="cat-bubble" aria-live="polite" aria-hidden="true"></div>
 
           <div class="status-center">
             <div class="status-chip">
@@ -140,11 +132,11 @@
         <div class="activity-header">
           <div>
             <span class="usage-label">System activity</span>
-            <h3>Activity over Time (7d)</h3>
+            <h3 id="activityTitle">Activity over Time (7d)</h3>
           </div>
-          <div class="activity-legend" aria-label="Chart legend">
-            <span><i></i> Tokens</span>
-            <span><i></i> Requests</span>
+          <div class="activity-toggle" role="tablist" aria-label="Chart view">
+            <button id="chartTabTokens" class="activity-tab is-active" role="tab" aria-selected="true" type="button">Tokens</button>
+            <button id="chartTabCost" class="activity-tab" role="tab" aria-selected="false" type="button">Cost</button>
           </div>
         </div>
         <div id="activityChart" class="activity-chart" role="img" aria-label="Seven day activity chart">
@@ -229,7 +221,6 @@
             <h3>Session timeline</h3>
           </div>
           <div id="historySessions" class="session-list"></div>
-          <button class="wide-button" type="button">Explore sessions</button>
         </aside>
       </section>
 
@@ -319,11 +310,6 @@
         <strong>ClaudeSignal</strong>
         <span>Claude CLI Status Dashboard</span>
       </div>
-      <nav aria-label="Footer">
-        <a href="#historyPanel">Project info</a>
-        <a href="#historyPanel">Privacy settings</a>
-        <a href="#historyPanel">System logs</a>
-      </nav>
       <p><span></span> System stable</p>
     </footer>
 

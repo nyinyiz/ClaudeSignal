@@ -12,6 +12,14 @@ const state = {
   lastStatus: null,
   catPlayTimeout: null,
   settingsTrigger: null,
+  chartView: "tokens",
+  bubbleIdleTimer: null,
+  bubbleMilestoneTimer: null,
+  bubbleIdleIndex: 0,
+  lastMood: null,
+  lastMilestoneTokens: 0,
+  lastMilestoneCost: 0,
+  bubbleQueue: [],
 };
 
 const THEME_KEY = "claude-signal-theme";
@@ -96,19 +104,14 @@ async function boot() {
   renderWorldTime();
   renderRefreshCountdown();
   initCatInteractions();
+  initChartToggle();
+  initBubbles();
 }
 
 function initTheme() {
-  const select = $("themeSelect");
   const saved = localStorage.getItem(THEME_KEY);
   const initialTheme = THEMES.has(saved) ? saved : "cozy";
   setTheme(initialTheme, false);
-
-  if (select) {
-    select.addEventListener("change", () => {
-      setTheme(select.value);
-    });
-  }
 
   document.querySelectorAll("[data-theme-choice]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -125,9 +128,6 @@ function setTheme(theme, persist = true) {
 }
 
 function syncThemeControls(theme) {
-  const select = $("themeSelect");
-  if (select && select.value !== theme) select.value = theme;
-
   document.querySelectorAll("[data-theme-choice]").forEach((button) => {
     const selected = button.dataset.themeChoice === theme;
     button.classList.toggle("is-selected", selected);
@@ -329,6 +329,7 @@ function renderHistory() {
   renderUsageRows("historyProjects", history.topProjects || [], "project");
   renderSessionRows(history.recentSessions || []);
   updateCatMood();
+  checkMilestones();
 }
 
 function renderRefreshCountdown() {
@@ -372,17 +373,27 @@ function renderActivityChart(rows) {
   if (!chart) return;
 
   const visible = normalizeActivityRows(rows);
-  const tokenValues = visible.map((row) => tokenTotal(row.totals));
-  const requestValues = visible.map((row) => row.totals?.turns || 0);
-  const maxTokens = Math.max(...tokenValues, 1);
-  const maxRequests = Math.max(...requestValues, 1);
-  const tokenPoints = tokenValues.map((value, index) => chartPoint(index, value, maxTokens, 30, 176));
-  const requestPoints = requestValues.map((value, index) => chartPoint(index, value, maxRequests, 92, 190));
 
-  $("tokensLine")?.setAttribute("d", smoothPath(tokenPoints));
-  $("requestsLine")?.setAttribute("d", smoothPath(requestPoints));
-  $("tokensArea")?.setAttribute("d", areaPath(tokenPoints, 208));
-  $("requestsArea")?.setAttribute("d", areaPath(requestPoints, 208));
+  // Hide cost bars when in tokens view, show when in cost view
+  const costGroup = document.getElementById("costBars");
+
+  if (state.chartView === "cost") {
+    renderCostChart(rows);
+  } else {
+    if (costGroup) costGroup.style.display = "none";
+
+    const tokenValues = visible.map((row) => tokenTotal(row.totals));
+    const requestValues = visible.map((row) => row.totals?.turns || 0);
+    const maxTokens = Math.max(...tokenValues, 1);
+    const maxRequests = Math.max(...requestValues, 1);
+    const tokenPoints = tokenValues.map((value, index) => chartPoint(index, value, maxTokens, 30, 176));
+    const requestPoints = requestValues.map((value, index) => chartPoint(index, value, maxRequests, 92, 190));
+
+    $("tokensLine")?.setAttribute("d", smoothPath(tokenPoints));
+    $("requestsLine")?.setAttribute("d", smoothPath(requestPoints));
+    $("tokensArea")?.setAttribute("d", areaPath(tokenPoints, 208));
+    $("requestsArea")?.setAttribute("d", areaPath(requestPoints, 208));
+  }
 
   const days = $("activityDays");
   if (days) {
@@ -606,6 +617,177 @@ function initCatInteractions() {
   }, { passive: true });
 
   updateCatMood();
+}
+
+// === Chart Toggle ===
+
+function initChartToggle() {
+  const tokensTab = $("chartTabTokens");
+  const costTab = $("chartTabCost");
+  if (!tokensTab || !costTab) return;
+
+  tokensTab.addEventListener("click", () => setChartView("tokens"));
+  costTab.addEventListener("click", () => setChartView("cost"));
+}
+
+function setChartView(view) {
+  state.chartView = view;
+  $("chartTabTokens")?.classList.toggle("is-active", view === "tokens");
+  $("chartTabCost")?.classList.toggle("is-active", view === "cost");
+  $("chartTabTokens")?.setAttribute("aria-selected", String(view === "tokens"));
+  $("chartTabCost")?.setAttribute("aria-selected", String(view === "cost"));
+  const title = $("activityTitle");
+  if (title) title.textContent = view === "cost" ? "Daily Cost (7d)" : "Activity over Time (7d)";
+  if (state.history?.dailyActivity) {
+    renderActivityChart(state.history.dailyActivity);
+  }
+}
+
+function renderCostChart(rows) {
+  const visible = normalizeActivityRows(rows);
+  const costValues = visible.map((row) => row.totals?.estimatedCostUsd || 0);
+  const maxCost = Math.max(...costValues, 0.01);
+
+  const barWidth = 60;
+  const gap = 1000 / 7;
+  const top = 30;
+  const bottom = 208;
+
+  let barsHtml = "";
+  visible.forEach((row, index) => {
+    const cost = costValues[index];
+    const ratio = cost / maxCost;
+    const barHeight = ratio * (bottom - top);
+    const x = index * gap + (gap - barWidth) / 2;
+    const y = bottom - barHeight;
+    barsHtml += `<rect class="cost-bar" x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6"/>`;
+    if (cost > 0) {
+      barsHtml += `<text class="cost-label" x="${x + barWidth / 2}" y="${y - 8}" text-anchor="middle">$${cost.toFixed(cost < 1 ? 2 : 1)}</text>`;
+    }
+  });
+
+  // Clear line/area paths and inject bars
+  $("tokensLine")?.setAttribute("d", "");
+  $("requestsLine")?.setAttribute("d", "");
+  $("tokensArea")?.setAttribute("d", "");
+  $("requestsArea")?.setAttribute("d", "");
+
+  let costGroup = document.getElementById("costBars");
+  const svg = document.querySelector("#activityChart svg");
+  if (!costGroup && svg) {
+    costGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    costGroup.id = "costBars";
+    svg.appendChild(costGroup);
+  }
+  if (costGroup) {
+    costGroup.innerHTML = barsHtml;
+    costGroup.style.display = "";
+  }
+}
+
+// === Cat Speech Bubbles ===
+
+const BUBBLE_IDLE_INTERVAL_MS = 30000;
+const BUBBLE_MILESTONE_DURATION_MS = 6000;
+
+const idleBubbles = {
+  sleeping: ["Zzz...", "No tokens yet today...", "Wake me when you start coding", "Still sleeping...", "Any sessions today?"],
+  calm: ["Quiet day so far", "Just warming up", "Nice and easy", "Plenty of capacity left", "Relaxed vibes today"],
+  curious: ["Getting interesting!", "Not bad, not bad", "I see some activity", "Tell me more...", "Hmm, what's this project?"],
+  focus: ["You're on a roll!", "Deep work mode", "Locked in", "The code flows", "Opus is hungry today"],
+  busy: ["So many tokens!", "Keyboard on fire!", "Busy busy busy", "That's a lot of turns", "Full speed ahead!"],
+  tired: ["Maybe take a break?", "That's a lot of coding...", "Getting heavy...", "Rest soon?", "Long day, huh?"],
+  overload: ["Meow! Slow down!", "My paws can't keep up", "Token overload!", "Rate limit incoming?", "Easy there, human!"],
+};
+
+const TOKEN_MILESTONES = [1_000_000, 5_000_000, 10_000_000, 25_000_000, 45_000_000];
+const COST_MILESTONES = [5, 10, 25, 50];
+
+function initBubbles() {
+  startIdleBubbleRotation();
+  showBubble("Good morning! Let's code", false);
+}
+
+function startIdleBubbleRotation() {
+  clearInterval(state.bubbleIdleTimer);
+  state.bubbleIdleTimer = setInterval(() => {
+    if (state.bubbleQueue.length > 0) return; // milestone showing
+    const mood = state.lastMood || "sleeping";
+    const messages = idleBubbles[mood] || idleBubbles.sleeping;
+    state.bubbleIdleIndex = (state.bubbleIdleIndex + 1) % messages.length;
+    showBubble(messages[state.bubbleIdleIndex], false);
+  }, BUBBLE_IDLE_INTERVAL_MS);
+}
+
+function showBubble(text, isMilestone) {
+  const bubble = $("catBubble");
+  if (!bubble) return;
+
+  if (isMilestone) {
+    bubble.classList.add("is-milestone");
+  } else {
+    bubble.classList.remove("is-milestone");
+  }
+
+  bubble.classList.remove("is-visible");
+  void bubble.offsetWidth;
+  bubble.textContent = text;
+  bubble.classList.add("is-visible");
+
+  if (isMilestone) {
+    clearTimeout(state.bubbleMilestoneTimer);
+    state.bubbleMilestoneTimer = setTimeout(() => {
+      state.bubbleQueue.shift();
+      if (state.bubbleQueue.length > 0) {
+        showBubble(state.bubbleQueue[0], true);
+      }
+    }, BUBBLE_MILESTONE_DURATION_MS);
+  }
+}
+
+function queueMilestoneBubble(text) {
+  state.bubbleQueue.push(text);
+  if (state.bubbleQueue.length === 1) {
+    showBubble(text, true);
+  }
+}
+
+function checkMilestones() {
+  const history = state.history;
+  if (!history) return;
+
+  const todayTokens = tokenTotal(history.today);
+  const todayCost = history.today?.estimatedCostUsd || 0;
+
+  for (const milestone of TOKEN_MILESTONES) {
+    if (todayTokens >= milestone && state.lastMilestoneTokens < milestone) {
+      queueMilestoneBubble(`${formatNumber(milestone)} tokens today!`);
+    }
+  }
+  state.lastMilestoneTokens = todayTokens;
+
+  for (const milestone of COST_MILESTONES) {
+    if (todayCost >= milestone && state.lastMilestoneCost < milestone) {
+      queueMilestoneBubble(`That's $${milestone} today, meow`);
+    }
+  }
+  state.lastMilestoneCost = todayCost;
+
+  const currentMood = catMoodFromState().name;
+  if (state.lastMood && state.lastMood !== currentMood && currentMood !== "sleeping") {
+    const moodReactions = {
+      calm: "Feeling chill now",
+      curious: "Oh, what's happening?",
+      focus: "Getting serious!",
+      busy: "Things are heating up!",
+      tired: "Yawn... getting heavy",
+      overload: "Whoa, slow down!",
+    };
+    if (moodReactions[currentMood]) {
+      queueMilestoneBubble(moodReactions[currentMood]);
+    }
+  }
+  state.lastMood = currentMood;
 }
 
 // === Helpers ===
