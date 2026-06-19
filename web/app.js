@@ -4,6 +4,8 @@ const state = {
   snapshot: null,
   usage: null,
   history: null,
+  usageFetchInFlight: false,
+  historyFetchInFlight: false,
   connected: false,
   lastStatus: null,
   catPlayTimeout: null,
@@ -11,6 +13,7 @@ const state = {
 };
 
 const THEME_KEY = "claude-signal-theme";
+const USAGE_REFRESH_INTERVAL_MS = 5000;
 const THEMES = new Set(["cozy", "matcha", "graphite", "ember"]);
 
 const moodMeta = {
@@ -56,21 +59,13 @@ async function boot() {
     console.warn("Initial status fetch failed", error);
   }
 
-  try {
-    const response = await fetch("/api/usage");
-    const payload = await response.json();
-    state.usage = payload.usage || null;
-    renderUsage();
-  } catch (error) {
-    console.warn("Initial usage fetch failed", error);
-  }
-
-  await fetchHistory();
+  await Promise.all([fetchCurrentUsage(), fetchHistory()]);
   updateCatMood();
 
   connect();
   setInterval(renderSnapshot, 1000);
-  setInterval(fetchHistory, 30000);
+  setInterval(fetchCurrentUsage, USAGE_REFRESH_INTERVAL_MS);
+  setInterval(fetchHistory, USAGE_REFRESH_INTERVAL_MS);
   setInterval(renderWorldTime, 1000);
   renderWorldTime();
   initCatInteractions();
@@ -163,12 +158,33 @@ function closeSettings() {
 }
 
 async function fetchHistory() {
+  if (state.historyFetchInFlight) return;
+  state.historyFetchInFlight = true;
   try {
-    const response = await fetch("/api/usage/history");
+    const response = await fetch("/api/usage/history", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.history = await response.json();
     renderHistory();
   } catch (error) {
     console.warn("Usage history fetch failed", error);
+  } finally {
+    state.historyFetchInFlight = false;
+  }
+}
+
+async function fetchCurrentUsage() {
+  if (state.usageFetchInFlight) return;
+  state.usageFetchInFlight = true;
+  try {
+    const response = await fetch("/api/usage", { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    state.usage = payload.usage || null;
+    renderUsage();
+  } catch (error) {
+    console.warn("Usage fetch failed", error);
+  } finally {
+    state.usageFetchInFlight = false;
   }
 }
 
