@@ -6,6 +6,8 @@ const state = {
   history: null,
   usageFetchInFlight: false,
   historyFetchInFlight: false,
+  nextHistoryRefreshAt: null,
+  isUnloading: false,
   connected: false,
   lastStatus: null,
   catPlayTimeout: null,
@@ -48,6 +50,9 @@ const emotionTypes = {
 const $ = (id) => document.getElementById(id);
 
 async function boot() {
+  window.addEventListener("beforeunload", () => {
+    state.isUnloading = true;
+  });
   initTheme();
   initSettings();
 
@@ -66,8 +71,10 @@ async function boot() {
   setInterval(renderSnapshot, 1000);
   setInterval(fetchCurrentUsage, USAGE_REFRESH_INTERVAL_MS);
   setInterval(fetchHistory, USAGE_REFRESH_INTERVAL_MS);
+  setInterval(renderRefreshCountdown, 1000);
   setInterval(renderWorldTime, 1000);
   renderWorldTime();
+  renderRefreshCountdown();
   initCatInteractions();
 }
 
@@ -160,15 +167,18 @@ function closeSettings() {
 async function fetchHistory() {
   if (state.historyFetchInFlight) return;
   state.historyFetchInFlight = true;
+  renderRefreshCountdown();
   try {
     const response = await fetch("/api/usage/history", { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.history = await response.json();
     renderHistory();
   } catch (error) {
-    console.warn("Usage history fetch failed", error);
+    logFetchWarning("Usage history fetch failed", error);
   } finally {
     state.historyFetchInFlight = false;
+    state.nextHistoryRefreshAt = Date.now() + USAGE_REFRESH_INTERVAL_MS;
+    renderRefreshCountdown();
   }
 }
 
@@ -182,10 +192,15 @@ async function fetchCurrentUsage() {
     state.usage = payload.usage || null;
     renderUsage();
   } catch (error) {
-    console.warn("Usage fetch failed", error);
+    logFetchWarning("Usage fetch failed", error);
   } finally {
     state.usageFetchInFlight = false;
   }
+}
+
+function logFetchWarning(message, error) {
+  if (state.isUnloading) return;
+  console.warn(message, error);
 }
 
 function connect() {
@@ -294,6 +309,27 @@ function renderHistory() {
   renderUsageRows("historyProjects", history.topProjects || [], "project");
   renderSessionRows(history.recentSessions || []);
   updateCatMood();
+}
+
+function renderRefreshCountdown() {
+  const countdown = $("historyCountdown");
+  if (!countdown) return;
+
+  if (state.historyFetchInFlight) {
+    countdown.textContent = "Refreshing";
+    countdown.classList.add("is-refreshing");
+    return;
+  }
+
+  countdown.classList.remove("is-refreshing");
+  if (!state.nextHistoryRefreshAt) {
+    countdown.textContent = `Next scan ${Math.round(USAGE_REFRESH_INTERVAL_MS / 1000)}s`;
+    return;
+  }
+
+  const remainingMs = Math.max(0, state.nextHistoryRefreshAt - Date.now());
+  const remainingSeconds = Math.ceil(remainingMs / 1000);
+  countdown.textContent = `Next scan ${remainingSeconds}s`;
 }
 
 function renderHistoryTotals(prefix, totals) {

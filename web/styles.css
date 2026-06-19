@@ -1573,9 +1573,17 @@ body.settings-open {
   line-height: 1.45;
 }
 
+.usage-refresh {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  align-self: center;
+  min-width: 150px;
+}
+
 .usage-updated {
   position: relative;
-  align-self: center;
   padding-left: 18px;
   color: var(--muted);
   white-space: nowrap;
@@ -1591,6 +1599,39 @@ body.settings-open {
   border-radius: 999px;
   background: var(--faint);
   transform: translateY(-50%);
+}
+
+.usage-countdown {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--line) 84%, var(--faint));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  color: var(--primary);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.usage-countdown.is-refreshing {
+  border-color: color-mix(in srgb, var(--primary-2) 54%, var(--line));
+  color: var(--primary-2);
+  animation: refreshPulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes refreshPulse {
+  from {
+    box-shadow: 0 0 0 rgba(255, 180, 75, 0);
+  }
+  to {
+    box-shadow: 0 0 18px color-mix(in srgb, var(--primary-2) 22%, transparent);
+  }
 }
 
 .history-summary {
@@ -1985,6 +2026,15 @@ dd {
   .usage-header {
     align-items: start;
     flex-direction: column;
+  }
+
+  .usage-header {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-refresh {
+    align-items: flex-start;
+    min-width: 0;
   }
 
   .topbar {
