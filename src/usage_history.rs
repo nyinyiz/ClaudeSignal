@@ -315,7 +315,7 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
     top_projects.sort_by_key(|item| {
         std::cmp::Reverse(item.totals.input_tokens + item.totals.output_tokens)
     });
-    top_projects.truncate(5);
+    top_projects.truncate(20);
 
     let mut recent_sessions = sessions
         .into_iter()
@@ -330,7 +330,7 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         })
         .collect::<Vec<_>>();
     recent_sessions.sort_by_key(|session| std::cmp::Reverse(session.last_activity_at.clone()));
-    recent_sessions.truncate(5);
+    recent_sessions.truncate(20);
 
     let daily_activity = daily_activity
         .into_iter()

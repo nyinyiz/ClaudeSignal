@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="ClaudeSignal — detailed Claude Code usage analytics." />
+    <title>Usage — ClaudeSignal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/usage-styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="/" class="back-link" aria-label="Back to dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7"></path>
+            </svg>
+          </a>
+          <div>
+            <p class="eyebrow">Claude Code</p>
+            <h1>Usage Analytics</h1>
+          </div>
+        </div>
+        <nav class="top-actions" aria-label="Page controls">
+          <span id="lastUpdated" class="usage-page-updated">Loading…</span>
+          <button id="refreshBtn" class="icon-button" type="button" aria-label="Refresh data">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+            </svg>
+          </button>
+        </nav>
+      </header>
+
+      <div id="loadingState" class="usage-page-loading">
+        <p>Scanning transcripts…</p>
+      </div>
+
+      <div id="pageContent" class="usage-page-content" hidden>
+        <!-- Summary row -->
+        <section class="usage-page-summary" aria-label="Usage summary">
+          <article>
+            <span>Today</span>
+            <strong id="summaryTodayTokens">--</strong>
+            <p id="summaryTodayMeta">--</p>
+          </article>
+          <article>
+            <span>This week</span>
+            <strong id="summaryWeekTokens">--</strong>
+            <p id="summaryWeekMeta">--</p>
+          </article>
+          <article>
+            <span>All time</span>
+            <strong id="summaryAllTokens">--</strong>
+            <p id="summaryAllMeta">--</p>
+          </article>
+          <article>
+            <span>Transcript files</span>
+            <strong id="summaryFiles">--</strong>
+            <p id="summaryPricing">--</p>
+          </article>
+        </section>
+
+        <!-- Token type breakdown -->
+        <section class="usage-page-card" aria-label="Token type breakdown">
+          <div class="usage-page-card-header">
+            <h2>Token Breakdown</h2>
+            <span class="usage-page-subtitle">All time by type</span>
+          </div>
+          <div id="tokenBreakdown" class="token-breakdown"></div>
+        </section>
+
+        <!-- Full model list -->
+        <section class="usage-page-card" aria-label="All models">
+          <div class="usage-page-card-header">
+            <h2>Models</h2>
+            <span id="modelCount" class="usage-page-subtitle">--</span>
+          </div>
+          <div class="usage-page-table-wrap">
+            <table class="usage-page-table" id="modelTable">
+              <thead>
+                <tr>
+                  <th>Model</th>
+                  <th class="num">Input</th>
+                  <th class="num">Output</th>
+                  <th class="num">Cache Read</th>
+                  <th class="num">Cache Write</th>
+                  <th class="num">Turns</th>
+                  <th class="num">Cost</th>
+                  <th class="num">Share</th>
+                </tr>
+              </thead>
+              <tbody id="modelBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Full project list -->
+        <section class="usage-page-card" aria-label="All projects">
+          <div class="usage-page-card-header">
+            <h2>Projects</h2>
+            <span id="projectCount" class="usage-page-subtitle">--</span>
+          </div>
+          <div class="usage-page-table-wrap">
+            <table class="usage-page-table" id="projectTable">
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th class="num">Tokens</th>
+                  <th class="num">Turns</th>
+                  <th class="num">Cost</th>
+                  <th class="num">Share</th>
+                </tr>
+              </thead>
+              <tbody id="projectBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Full session list -->
+        <section class="usage-page-card" aria-label="All sessions">
+          <div class="usage-page-card-header">
+            <h2>Recent Sessions</h2>
+            <span id="sessionCount" class="usage-page-subtitle">--</span>
+          </div>
+          <div class="usage-page-table-wrap">
+            <table class="usage-page-table" id="sessionTable">
+              <thead>
+                <tr>
+                  <th>Session</th>
+                  <th>Project</th>
+                  <th>Model</th>
+                  <th class="num">Tokens</th>
+                  <th class="num">Turns</th>
+                  <th class="num">Cost</th>
+                  <th class="num">Last Active</th>
+                </tr>
+              </thead>
+              <tbody id="sessionBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong>ClaudeSignal</strong>
+        <span>Usage Analytics</span>
+      </div>
+      <p><a href="/">Back to dashboard</a></p>
+    </footer>
+
+    <script src="/usage.js"></script>
+  </body>
+</html>

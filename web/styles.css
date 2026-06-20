@@ -2053,6 +2053,33 @@ body.settings-open {
   border-bottom: 1px solid var(--line-soft);
 }
 
+.history-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-soft);
+  text-align: center;
+}
+
+.view-all-link {
+  display: inline-block;
+  padding: 8px 20px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  color: var(--primary);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.view-all-link:hover {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  transform: translateY(-1px);
+}
+
 .usage-list {
   display: grid;
   gap: 14px;
