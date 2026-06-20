@@ -46,9 +46,9 @@ function render(data) {
 
 function renderSummary(data) {
   $("summaryTodayTokens").textContent = fmtTokens(data.today);
-  $("summaryTodayMeta").textContent = `${fmtNum(data.today?.turns || 0)} turns · ${fmtCost(data.today?.estimatedCostUsd || 0)}`;
+  $("summaryTodayMeta").textContent = summaryMeta(data.today, data.yesterday, "vs yesterday");
   $("summaryWeekTokens").textContent = fmtTokens(data.week);
-  $("summaryWeekMeta").textContent = `${fmtNum(data.week?.turns || 0)} turns · ${fmtCost(data.week?.estimatedCostUsd || 0)}`;
+  $("summaryWeekMeta").textContent = summaryMeta(data.week, data.lastWeek, "vs last week");
   $("summaryAllTokens").textContent = fmtTokens(data.allTime);
   $("summaryAllMeta").textContent = `${fmtNum(data.allTime?.turns || 0)} turns · ${fmtCost(data.allTime?.estimatedCostUsd || 0)}`;
   $("summaryFiles").textContent = `${data.transcriptFiles}`;
@@ -216,6 +216,25 @@ function renderSessions(sessions) {
       </div>`;
     })
     .join("");
+}
+
+function summaryMeta(current, previous, label) {
+  const parts = [`${fmtNum(current?.turns || 0)} turns`, fmtCost(current?.estimatedCostUsd || 0)];
+  const delta = deltaLabel(current, previous, label);
+  if (delta) parts.push(delta);
+  return parts.join(" · ");
+}
+
+function deltaLabel(current, previous, label) {
+  if (!previous) return "";
+  const cur = tokTotal(current);
+  const prev = tokTotal(previous);
+  if (prev === 0 && cur === 0) return "";
+  if (prev === 0) return `+100% ${label}`;
+  const change = ((cur - prev) / prev) * 100;
+  if (Math.abs(change) < 0.5) return "";
+  const sign = change > 0 ? "+" : "";
+  return `${sign}${Math.round(change)}% ${label}`;
 }
 
 // === Helpers ===

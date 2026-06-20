@@ -58,7 +58,9 @@ pub struct UsageHistorySnapshot {
     pub transcript_files: usize,
     pub turns: usize,
     pub today: UsageTotals,
+    pub yesterday: UsageTotals,
     pub week: UsageTotals,
+    pub last_week: UsageTotals,
     pub all_time: UsageTotals,
     pub by_model: Vec<ModelUsage>,
     pub top_projects: Vec<ProjectUsage>,
@@ -208,8 +210,14 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
     let today = Local::now().date_naive();
     let week_start = today - chrono::Duration::days(today.weekday().num_days_from_monday() as i64);
 
+    let yesterday = today - chrono::Duration::days(1);
+    let last_week_start = week_start - chrono::Duration::weeks(1);
+    let last_week_end = week_start - chrono::Duration::days(1);
+
     let mut today_totals = UsageTotals::default();
+    let mut yesterday_totals = UsageTotals::default();
     let mut week_totals = UsageTotals::default();
+    let mut last_week_totals = UsageTotals::default();
     let mut all_time_totals = UsageTotals::default();
     let mut by_model: BTreeMap<String, UsageTotals> = BTreeMap::new();
     let mut by_project: BTreeMap<String, UsageTotals> = BTreeMap::new();
@@ -266,8 +274,14 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         if turn_date == Some(today) {
             add_turn(&mut today_totals, turn);
         }
+        if turn_date == Some(yesterday) {
+            add_turn(&mut yesterday_totals, turn);
+        }
         if turn_date.is_some_and(|date| date >= week_start && date <= today) {
             add_turn(&mut week_totals, turn);
+        }
+        if turn_date.is_some_and(|date| date >= last_week_start && date <= last_week_end) {
+            add_turn(&mut last_week_totals, turn);
         }
         if let Some(totals) = turn_date.and_then(|date| daily_activity.get_mut(&date)) {
             add_turn(totals, turn);
@@ -366,7 +380,9 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         transcript_files,
         turns: seen_turns,
         today: today_totals,
+        yesterday: yesterday_totals,
         week: week_totals,
+        last_week: last_week_totals,
         all_time: all_time_totals,
         by_model,
         top_projects,

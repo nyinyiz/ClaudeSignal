@@ -336,8 +336,8 @@ function renderHistory() {
     ? noteLines.join(" · ")
     : "No Claude Code usage transcripts found on this Mac yet.";
 
-  renderHistoryTotals("historyToday", history.today);
-  renderHistoryTotals("historyWeek", history.week);
+  renderHistoryTotals("historyToday", history.today, history.yesterday);
+  renderHistoryTotals("historyWeek", history.week, history.lastWeek);
   renderHistoryTotals("historyAll", history.allTime);
   renderActivityChart(getActivityRows());
   renderUsageRows("historyModels", history.byModel || [], "model");
@@ -378,9 +378,24 @@ function renderRefreshCountdown() {
   countdown.setAttribute("aria-label", `Next usage scan in ${remainingSeconds} seconds`);
 }
 
-function renderHistoryTotals(prefix, totals) {
+function renderHistoryTotals(prefix, totals, previous) {
   $(`${prefix}Tokens`).textContent = formatTokenTotal(totals);
-  $(`${prefix}Meta`).textContent = `${formatNumber(totals?.turns || 0)} turns · ${formatCost(totals?.estimatedCostUsd || 0)}`;
+  const metaParts = [`${formatNumber(totals?.turns || 0)} turns`, formatCost(totals?.estimatedCostUsd || 0)];
+  const delta = deltaText(totals, previous);
+  if (delta) metaParts.push(delta);
+  $(`${prefix}Meta`).textContent = metaParts.join(" · ");
+}
+
+function deltaText(current, previous) {
+  if (!previous) return "";
+  const cur = tokenTotal(current);
+  const prev = tokenTotal(previous);
+  if (prev === 0 && cur === 0) return "";
+  if (prev === 0) return "+100%";
+  const change = ((cur - prev) / prev) * 100;
+  if (Math.abs(change) < 0.5) return "";
+  const sign = change > 0 ? "+" : "";
+  return `${sign}${Math.round(change)}% vs prior`;
 }
 
 function renderActivityChart(rows) {
