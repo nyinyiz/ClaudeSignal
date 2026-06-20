@@ -2040,6 +2040,45 @@ body.settings-open {
   line-height: 1.35;
 }
 
+.delta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.delta-badge.delta-up {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.delta-badge.delta-down {
+  color: #4dd0a1;
+  background: rgba(77, 208, 161, 0.1);
+}
+
+.delta-badge.delta-flat {
+  color: var(--faint);
+  background: rgba(128, 128, 128, 0.08);
+}
+
+.delta-badge svg {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .history-lists {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

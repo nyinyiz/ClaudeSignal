@@ -380,22 +380,27 @@ function renderRefreshCountdown() {
 
 function renderHistoryTotals(prefix, totals, previous) {
   $(`${prefix}Tokens`).textContent = formatTokenTotal(totals);
+  const meta = $(`${prefix}Meta`);
   const metaParts = [`${formatNumber(totals?.turns || 0)} turns`, formatCost(totals?.estimatedCostUsd || 0)];
-  const delta = deltaText(totals, previous);
-  if (delta) metaParts.push(delta);
-  $(`${prefix}Meta`).textContent = metaParts.join(" · ");
+  meta.textContent = metaParts.join(" · ");
+  const badge = deltaBadge(totals, previous);
+  if (badge) meta.insertAdjacentHTML("beforeend", ` ${badge}`);
 }
 
-function deltaText(current, previous) {
+function deltaBadge(current, previous) {
   if (!previous) return "";
   const cur = tokenTotal(current);
   const prev = tokenTotal(previous);
   if (prev === 0 && cur === 0) return "";
-  if (prev === 0) return "+100%";
+  if (prev === 0) return '<span class="delta-badge delta-up"><svg viewBox="0 0 12 12"><path d="M6 2v8M6 2l3 3M6 2 3 5"/></svg>new</span>';
   const change = ((cur - prev) / prev) * 100;
-  if (Math.abs(change) < 0.5) return "";
-  const sign = change > 0 ? "+" : "";
-  return `${sign}${Math.round(change)}% vs prior`;
+  if (Math.abs(change) < 0.5) return '<span class="delta-badge delta-flat">~0%</span>';
+  const rounded = Math.round(change);
+  const sign = rounded > 0 ? "+" : "";
+  if (rounded > 0) {
+    return `<span class="delta-badge delta-up"><svg viewBox="0 0 12 12"><path d="M6 2v8M6 2l3 3M6 2 3 5"/></svg>${sign}${rounded}%</span>`;
+  }
+  return `<span class="delta-badge delta-down"><svg viewBox="0 0 12 12"><path d="M6 10V2M6 10l3-3M6 10 3 7"/></svg>${rounded}%</span>`;
 }
 
 function renderActivityChart(rows) {

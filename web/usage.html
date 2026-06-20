@@ -76,6 +76,25 @@
           <div id="tokenBreakdown" class="token-breakdown"></div>
         </section>
 
+        <!-- Trends: Today vs Yesterday, This Week vs Last Week -->
+        <div class="usage-page-two-col">
+          <section class="usage-page-card" aria-label="Today vs yesterday">
+            <div class="usage-page-card-header">
+              <h2>Today vs Yesterday</h2>
+              <span id="trendDayBadge" class="usage-page-subtitle">--</span>
+            </div>
+            <div id="trendDay" class="trend-compare"></div>
+          </section>
+
+          <section class="usage-page-card" aria-label="This week vs last week">
+            <div class="usage-page-card-header">
+              <h2>This Week vs Last Week</h2>
+              <span id="trendWeekBadge" class="usage-page-subtitle">--</span>
+            </div>
+            <div id="trendWeek" class="trend-compare"></div>
+          </section>
+        </div>
+
         <!-- Cost by model (visual) -->
         <section class="usage-page-card" aria-label="Cost by model">
           <div class="usage-page-card-header">
@@ -83,6 +102,15 @@
             <span id="modelCostTotal" class="usage-page-subtitle">--</span>
           </div>
           <div id="costByModel" class="visual-list"></div>
+        </section>
+
+        <!-- Cost Optimization -->
+        <section class="usage-page-card" aria-label="Cost optimization">
+          <div class="usage-page-card-header">
+            <h2>Cost Optimization</h2>
+            <span class="usage-page-subtitle">Model recommendations</span>
+          </div>
+          <div id="costOptimization" class="optimization-panel"></div>
         </section>
 
         <!-- Models + Projects side by side -->

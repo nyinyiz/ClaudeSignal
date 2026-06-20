@@ -4,9 +4,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use chrono::{DateTime, Datelike, Local, Utc};
+use chrono::{DateTime, Datelike, Local, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+use crate::db;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -106,7 +108,46 @@ pub fn scan_paths(transcript_files: &[PathBuf]) -> UsageHistorySnapshot {
     for file in transcript_files {
         turns.extend(parse_jsonl_file(file));
     }
-    build_snapshot(transcript_files.len(), turns)
+
+    // Find the earliest date in current JSONL data
+    let today = Local::now().date_naive();
+    let earliest_jsonl_date = turns
+        .iter()
+        .filter_map(|t| t.timestamp)
+        .map(|ts| ts.with_timezone(&Local).date_naive())
+        .min();
+
+    // Persist completed days to DB and load historical data
+    let db_historical = match db::open_db() {
+        Ok(conn) => {
+            // Store completed days from JSONL to DB (not today — still accumulating)
+            let daily_rows = aggregate_turns_by_day(&turns, today);
+            if !daily_rows.is_empty() {
+                if let Err(e) = db::store_daily_aggregates(&conn, &daily_rows) {
+                    tracing::warn!("Failed to store daily aggregates: {}", e);
+                }
+            }
+
+            // Load historical data from DB for dates before JSONL coverage
+            if let Some(earliest) = earliest_jsonl_date {
+                match db::load_daily_aggregates(&conn, Some(earliest)) {
+                    Ok(rows) => rows,
+                    Err(e) => {
+                        tracing::warn!("Failed to load historical data: {}", e);
+                        Vec::new()
+                    }
+                }
+            } else {
+                Vec::new()
+            }
+        }
+        Err(e) => {
+            tracing::warn!("Failed to open usage DB: {}", e);
+            Vec::new()
+        }
+    };
+
+    build_snapshot(transcript_files.len(), turns, &db_historical)
 }
 
 fn default_projects_dirs() -> Vec<PathBuf> {
@@ -206,7 +247,48 @@ fn turn_from_record(record: &Value) -> Option<TurnUsage> {
     })
 }
 
-fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistorySnapshot {
+/// Aggregate turns into daily rows grouped by (date, model, project).
+/// Excludes `today` since that day is still accumulating.
+fn aggregate_turns_by_day(turns: &[TurnUsage], today: NaiveDate) -> Vec<db::DailyRow> {
+    let mut map: BTreeMap<(NaiveDate, String, String), db::DailyRow> = BTreeMap::new();
+
+    for turn in turns {
+        let Some(ts) = turn.timestamp else { continue };
+        let date = ts.with_timezone(&Local).date_naive();
+        if date >= today {
+            continue; // skip today — still accumulating
+        }
+        let project = project_name_from_cwd(&turn.cwd);
+        let key = (date, turn.model.clone(), project.clone());
+        let row = map.entry(key).or_insert_with(|| db::DailyRow {
+            date,
+            model: turn.model.clone(),
+            project,
+            input_tokens: 0,
+            output_tokens: 0,
+            cache_read_tokens: 0,
+            cache_creation_tokens: 0,
+            turns: 0,
+            estimated_cost_usd: 0.0,
+        });
+        row.input_tokens += turn.input_tokens;
+        row.output_tokens += turn.output_tokens;
+        row.cache_read_tokens += turn.cache_read_tokens;
+        row.cache_creation_tokens += turn.cache_creation_tokens;
+        row.turns += 1;
+        row.estimated_cost_usd += estimate_cost_for_model(
+            &turn.model,
+            turn.input_tokens,
+            turn.output_tokens,
+            turn.cache_read_tokens,
+            turn.cache_creation_tokens,
+        );
+    }
+
+    map.into_values().collect()
+}
+
+fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>, db_historical: &[db::DailyRow]) -> UsageHistorySnapshot {
     let today = Local::now().date_naive();
     let week_start = today - chrono::Duration::days(today.weekday().num_days_from_monday() as i64);
 
@@ -314,6 +396,38 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         }
     }
 
+    // Merge historical DB data into aggregates
+    for row in db_historical {
+        seen_turns += row.turns as usize;
+        merge_row(&mut all_time_totals, row);
+        merge_row(by_model.entry(row.model.clone()).or_default(), row);
+        merge_row(by_project.entry(row.project.clone()).or_default(), row);
+
+        // Merge into activity buckets
+        if let Some(totals) = daily_activity.get_mut(&row.date) {
+            merge_row(totals, row);
+        }
+        let row_week_start = row.date
+            - chrono::Duration::days(row.date.weekday().num_days_from_monday() as i64);
+        if let Some(totals) = weekly_activity.get_mut(&row_week_start) {
+            merge_row(totals, row);
+        }
+        let row_month_start = NaiveDate::from_ymd_opt(row.date.year(), row.date.month(), 1);
+        if let Some(ms) = row_month_start {
+            if let Some(totals) = monthly_activity.get_mut(&ms) {
+                merge_row(totals, row);
+            }
+        }
+
+        // Historical data can contribute to yesterday / last_week
+        if row.date == yesterday {
+            merge_row(&mut yesterday_totals, row);
+        }
+        if row.date >= last_week_start && row.date <= last_week_end {
+            merge_row(&mut last_week_totals, row);
+        }
+    }
+
     let mut by_model = by_model
         .into_iter()
         .map(|(model, totals)| ModelUsage { model, totals })
@@ -408,6 +522,15 @@ fn add_turn(totals: &mut UsageTotals, turn: &TurnUsage) {
         turn.cache_read_tokens,
         turn.cache_creation_tokens,
     );
+}
+
+fn merge_row(totals: &mut UsageTotals, row: &db::DailyRow) {
+    totals.input_tokens += row.input_tokens;
+    totals.output_tokens += row.output_tokens;
+    totals.cache_read_tokens += row.cache_read_tokens;
+    totals.cache_creation_tokens += row.cache_creation_tokens;
+    totals.turns += row.turns;
+    totals.estimated_cost_usd += row.estimated_cost_usd;
 }
 
 fn estimate_cost_for_model(

@@ -18,6 +18,7 @@ chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4", features = ["derive"] }
 futures-util = "0.3"
 local-ip-address = "0.6"
+rusqlite = { version = "0.31", features = ["bundled"] }
 libc = "0.2"
 portable-pty = "0.8"
 serde = { version = "1", features = ["derive"] }
