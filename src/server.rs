@@ -37,17 +37,22 @@ fn print_startup(host: &str, port: u16) {
     println!("ClaudeSignal is running\n");
     println!("Local:");
     println!("  http://localhost:{port}\n");
-    println!("Network:");
-    match local_network_ip() {
-        Some(ip) => {
-            println!("  http://{ip}:{port}\n");
-            println!("WebSocket:");
-            println!("  ws://{ip}:{port}/ws\n");
-        }
-        None => {
-            println!("  Could not detect a local network IP. Use localhost on this Mac.");
-            println!("  Bind address: {host}:{port}\n");
+
+    let is_lan = host == "0.0.0.0" || host == "::";
+    if is_lan {
+        println!("Network:");
+        match local_network_ip() {
+            Some(ip) => {
+                println!("  http://{ip}:{port}\n");
+                println!("WebSocket:");
+                println!("  ws://{ip}:{port}/ws\n");
+            }
+            None => {
+                println!("  Could not detect a local network IP. Use localhost on this Mac.");
+                println!("  Bind address: {host}:{port}\n");
+            }
         }
     }
+
     println!("Press Ctrl+C to stop.");
 }

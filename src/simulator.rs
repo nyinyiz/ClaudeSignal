@@ -113,13 +113,7 @@ pub async fn run(state: AppState, scenario: Scenario) {
         if matches!(status, ClaudeStatus::Completed) {
             state.status_store.complete(true).await;
         } else if matches!(status, ClaudeStatus::Error | ClaudeStatus::SessionLimit) {
-            let mut ok = false;
-            if matches!(status, ClaudeStatus::SessionLimit) {
-                ok = false;
-            }
-            if matches!(status, ClaudeStatus::Error) {
-                state.status_store.complete(ok).await;
-            }
+            state.status_store.complete(false).await;
         }
         broadcast_status(&state).await;
         tokio::time::sleep(Duration::from_secs(delay)).await;

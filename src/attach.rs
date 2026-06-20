@@ -49,7 +49,7 @@ pub fn attach(
 ) -> anyhow::Result<AttachedSession> {
     if let Some(existing) = read_session(&session_id)? {
         if port_is_open(existing.port) {
-            print_urls(existing.port);
+            print_urls(host, existing.port);
             return Ok(existing);
         }
     }
@@ -104,7 +104,7 @@ pub fn attach(
         cwd,
     };
     write_session(&session)?;
-    print_urls(port);
+    print_urls(host, port);
     Ok(session)
 }
 
@@ -152,14 +152,18 @@ pub fn stop_all() -> anyhow::Result<usize> {
     Ok(stopped)
 }
 
-pub fn print_urls(port: u16) {
+pub fn print_urls(host: &str, port: u16) {
     println!("ClaudeSignal started\n");
     println!("Local:");
     println!("  http://localhost:{port}\n");
-    println!("Phone:");
-    match local_network_ip() {
-        Some(ip) => println!("  http://{ip}:{port}\n"),
-        None => println!("  Could not detect local network IP. Use localhost on this Mac.\n"),
+
+    let is_lan = host == "0.0.0.0" || host == "::";
+    if is_lan {
+        println!("Phone:");
+        match local_network_ip() {
+            Some(ip) => println!("  http://{ip}:{port}\n"),
+            None => println!("  Could not detect local network IP. Use localhost on this Mac.\n"),
+        }
     }
 }
 
