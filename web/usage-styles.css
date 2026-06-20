@@ -43,6 +43,10 @@
   min-height: 300px;
 }
 
+.usage-page-loading[hidden] {
+  display: none;
+}
+
 .usage-page-loading p {
   color: var(--muted);
   font-family: var(--mono);
