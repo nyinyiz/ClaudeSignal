@@ -24,6 +24,8 @@ const state = {
 };
 
 const THEME_KEY = "claude-signal-theme";
+const TZ_KEY = "claude-signal-timezones";
+const MAX_TIMEZONES = 6;
 const USAGE_REFRESH_INTERVAL_MS = 10000;
 const THEMES = new Set(["cozy", "matcha", "graphite", "ember"]);
 const MOOD_THRESHOLDS = [
@@ -83,6 +85,7 @@ async function boot() {
     state.isUnloading = true;
   });
   initTheme();
+  initTimezones();
   initSettings();
 
   try {
@@ -173,6 +176,7 @@ function openSettings(trigger) {
   overlay.setAttribute("aria-hidden", "false");
   document.body.classList.add("settings-open");
   syncThemeControls(document.documentElement.dataset.theme || "cozy");
+  renderTzSettings();
   closeButton?.focus();
 }
 
@@ -955,22 +959,253 @@ function shortProject(project) {
   return parts[parts.length - 1];
 }
 
-function renderWorldTime() {
-  setClock("timeThailand", "Asia/Bangkok");
-  setClock("timeUk", "Europe/London");
-  setClock("timeHongKong", "Asia/Hong_Kong");
-  setClock("timeCanada", "America/Toronto");
+// === Timezone Management ===
+
+const TZ_COMMON = [
+  { zone: "Pacific/Honolulu", label: "Honolulu", short: "HST", keywords: "hawaii usa utc-10" },
+  { zone: "America/Anchorage", label: "Anchorage", short: "AKST", keywords: "alaska usa utc-9" },
+  { zone: "America/Los_Angeles", label: "Los Angeles", short: "PST", keywords: "la california usa pacific utc-8" },
+  { zone: "America/Denver", label: "Denver", short: "MST", keywords: "colorado usa mountain utc-7" },
+  { zone: "America/Chicago", label: "Chicago", short: "CST", keywords: "illinois usa central utc-6" },
+  { zone: "America/New_York", label: "New York", short: "EST", keywords: "nyc usa eastern utc-5" },
+  { zone: "America/Toronto", label: "Toronto", short: "EST", keywords: "canada ontario eastern utc-5" },
+  { zone: "America/Vancouver", label: "Vancouver", short: "PST", keywords: "canada bc pacific utc-8" },
+  { zone: "America/Sao_Paulo", label: "São Paulo", short: "BRT", keywords: "brazil utc-3" },
+  { zone: "America/Mexico_City", label: "Mexico City", short: "CST", keywords: "mexico central utc-6" },
+  { zone: "Europe/London", label: "London", short: "GMT", keywords: "uk england britain utc+0 utc gmt" },
+  { zone: "Europe/Paris", label: "Paris", short: "CET", keywords: "france utc+1" },
+  { zone: "Europe/Berlin", label: "Berlin", short: "CET", keywords: "germany utc+1" },
+  { zone: "Europe/Amsterdam", label: "Amsterdam", short: "CET", keywords: "netherlands holland utc+1" },
+  { zone: "Europe/Madrid", label: "Madrid", short: "CET", keywords: "spain utc+1" },
+  { zone: "Europe/Rome", label: "Rome", short: "CET", keywords: "italy utc+1" },
+  { zone: "Europe/Zurich", label: "Zurich", short: "CET", keywords: "switzerland utc+1" },
+  { zone: "Europe/Stockholm", label: "Stockholm", short: "CET", keywords: "sweden utc+1" },
+  { zone: "Europe/Warsaw", label: "Warsaw", short: "CET", keywords: "poland utc+1" },
+  { zone: "Europe/Istanbul", label: "Istanbul", short: "TRT", keywords: "turkey utc+3" },
+  { zone: "Europe/Moscow", label: "Moscow", short: "MSK", keywords: "russia utc+3" },
+  { zone: "Europe/Kyiv", label: "Kyiv", short: "EET", keywords: "ukraine utc+2" },
+  { zone: "Europe/Athens", label: "Athens", short: "EET", keywords: "greece utc+2" },
+  { zone: "Africa/Cairo", label: "Cairo", short: "EET", keywords: "egypt utc+2" },
+  { zone: "Africa/Lagos", label: "Lagos", short: "WAT", keywords: "nigeria west africa utc+1" },
+  { zone: "Africa/Nairobi", label: "Nairobi", short: "EAT", keywords: "kenya east africa utc+3" },
+  { zone: "Africa/Johannesburg", label: "Johannesburg", short: "SAST", keywords: "south africa utc+2" },
+  { zone: "Asia/Dubai", label: "Dubai", short: "GST", keywords: "uae emirates utc+4" },
+  { zone: "Asia/Riyadh", label: "Riyadh", short: "AST", keywords: "saudi arabia utc+3" },
+  { zone: "Asia/Kolkata", label: "India", short: "IST", keywords: "mumbai delhi bangalore india utc+5:30" },
+  { zone: "Asia/Dhaka", label: "Dhaka", short: "BST", keywords: "bangladesh utc+6" },
+  { zone: "Asia/Yangon", label: "Yangon", short: "MMT", keywords: "myanmar burma utc+6:30" },
+  { zone: "Asia/Bangkok", label: "Bangkok", short: "ICT", keywords: "thailand utc+7" },
+  { zone: "Asia/Ho_Chi_Minh", label: "Ho Chi Minh", short: "ICT", keywords: "vietnam saigon utc+7" },
+  { zone: "Asia/Jakarta", label: "Jakarta", short: "WIB", keywords: "indonesia utc+7" },
+  { zone: "Asia/Singapore", label: "Singapore", short: "SGT", keywords: "utc+8" },
+  { zone: "Asia/Kuala_Lumpur", label: "Kuala Lumpur", short: "MYT", keywords: "malaysia utc+8" },
+  { zone: "Asia/Hong_Kong", label: "Hong Kong", short: "HKT", keywords: "hk utc+8" },
+  { zone: "Asia/Shanghai", label: "Shanghai", short: "CST", keywords: "china beijing utc+8" },
+  { zone: "Asia/Taipei", label: "Taipei", short: "CST", keywords: "taiwan utc+8" },
+  { zone: "Asia/Seoul", label: "Seoul", short: "KST", keywords: "korea south korea utc+9" },
+  { zone: "Asia/Tokyo", label: "Tokyo", short: "JST", keywords: "japan utc+9" },
+  { zone: "Australia/Perth", label: "Perth", short: "AWST", keywords: "australia western utc+8" },
+  { zone: "Australia/Sydney", label: "Sydney", short: "AEST", keywords: "australia eastern utc+10" },
+  { zone: "Australia/Melbourne", label: "Melbourne", short: "AEST", keywords: "australia eastern utc+10" },
+  { zone: "Pacific/Auckland", label: "Auckland", short: "NZST", keywords: "new zealand utc+12" },
+];
+
+function getSavedTimezones() {
+  try {
+    const raw = localStorage.getItem(TZ_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((tz) => tz && tz.zone && tz.label).slice(0, MAX_TIMEZONES);
+  } catch {
+    return [];
+  }
 }
 
-function setClock(id, timeZone) {
-  const element = $(id);
-  if (!element) return;
-  element.textContent = new Intl.DateTimeFormat([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    timeZone,
-  }).format(new Date());
+function saveTimezones(list) {
+  localStorage.setItem(TZ_KEY, JSON.stringify(list.slice(0, MAX_TIMEZONES)));
+}
+
+function tzOffset(zone) {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, timeZoneName: "shortOffset" }).formatToParts(new Date());
+    const offset = parts.find((p) => p.type === "timeZoneName");
+    return offset ? offset.value : "";
+  } catch {
+    return "";
+  }
+}
+
+function isDaytime(zone) {
+  try {
+    const hour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: zone, hour: "numeric", hour12: false }).format(new Date()), 10);
+    return hour >= 7 && hour < 19;
+  } catch {
+    return true;
+  }
+}
+
+function initTimezones() {
+  const input = $("tzSearch");
+  const dropdown = $("tzDropdown");
+  if (!input || !dropdown) return;
+
+  input.addEventListener("input", () => {
+    renderTzDropdown(input.value.trim());
+  });
+
+  input.addEventListener("focus", () => {
+    renderTzDropdown(input.value.trim());
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".tz-search-wrap")) {
+      dropdown.hidden = true;
+    }
+  });
+
+  input.addEventListener("keydown", (e) => {
+    const items = dropdown.querySelectorAll(".tz-dropdown-item");
+    const active = dropdown.querySelector(".tz-dropdown-active");
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!items.length) return;
+      const next = active ? active.nextElementSibling : items[0];
+      if (active) active.classList.remove("tz-dropdown-active");
+      if (next) next.classList.add("tz-dropdown-active");
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!items.length) return;
+      const prev = active ? active.previousElementSibling : null;
+      if (active) active.classList.remove("tz-dropdown-active");
+      if (prev) prev.classList.add("tz-dropdown-active");
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (active) {
+        addTimezone(active.dataset.zone);
+      }
+    } else if (e.key === "Escape") {
+      dropdown.hidden = true;
+    }
+  });
+
+  renderTzSettings();
+}
+
+function renderTzDropdown(query) {
+  const dropdown = $("tzDropdown");
+  const input = $("tzSearch");
+  if (!dropdown) return;
+
+  const saved = getSavedTimezones();
+  if (saved.length >= MAX_TIMEZONES) {
+    dropdown.innerHTML = '<div class="tz-dropdown-msg">Maximum 6 time zones reached</div>';
+    dropdown.hidden = false;
+    return;
+  }
+
+  const savedZones = new Set(saved.map((tz) => tz.zone));
+  const q = query.toLowerCase();
+  const filtered = TZ_COMMON.filter((tz) => {
+    if (savedZones.has(tz.zone)) return false;
+    if (!q) return true;
+    const haystack = `${tz.label} ${tz.short} ${tz.keywords} ${tz.zone}`.toLowerCase();
+    return q.split(/\s+/).every((word) => haystack.includes(word));
+  });
+
+  if (filtered.length === 0) {
+    dropdown.innerHTML = '<div class="tz-dropdown-msg">No matches</div>';
+    dropdown.hidden = false;
+    return;
+  }
+
+  dropdown.innerHTML = filtered.map((tz) => (
+    `<button class="tz-dropdown-item" type="button" data-zone="${tz.zone}">
+      <strong>${escapeHtml(tz.label)}</strong>
+      <em>${escapeHtml(tz.short)}</em>
+    </button>`
+  )).join("");
+  dropdown.hidden = false;
+
+  dropdown.querySelectorAll(".tz-dropdown-item").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      addTimezone(btn.dataset.zone);
+    });
+  });
+}
+
+function addTimezone(zone) {
+  const saved = getSavedTimezones();
+  if (saved.length >= MAX_TIMEZONES) return;
+  if (saved.some((tz) => tz.zone === zone)) return;
+  const match = TZ_COMMON.find((tz) => tz.zone === zone);
+  if (!match) return;
+  saved.push({ zone, label: match.label, short: match.short });
+  saveTimezones(saved);
+  const input = $("tzSearch");
+  const dropdown = $("tzDropdown");
+  if (input) input.value = "";
+  if (dropdown) dropdown.hidden = true;
+  renderTzSettings();
+  renderWorldTime();
+}
+
+function renderTzSettings() {
+  const container = $("tzList");
+  if (!container) return;
+
+  const saved = getSavedTimezones();
+
+  if (saved.length === 0) {
+    container.innerHTML = '<p class="tz-empty">No time zones added yet.</p>';
+    return;
+  }
+
+  container.innerHTML = saved.map((tz, index) => (
+    `<div class="tz-item">
+      <span class="tz-item-label"><strong>${escapeHtml(tz.label)}</strong><em>${escapeHtml(tz.short || tzOffset(tz.zone))}</em></span>
+      <button class="tz-remove-btn" type="button" data-tz-index="${index}" aria-label="Remove ${escapeHtml(tz.label)}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+      </button>
+    </div>`
+  )).join("");
+
+  container.querySelectorAll(".tz-remove-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.tzIndex, 10);
+      const list = getSavedTimezones();
+      list.splice(idx, 1);
+      saveTimezones(list);
+      renderTzSettings();
+      renderWorldTime();
+    });
+  });
+}
+
+function renderWorldTime() {
+  const container = $("timeList");
+  if (!container) return;
+
+  const saved = getSavedTimezones();
+  if (saved.length === 0) {
+    container.innerHTML = '<article class="time-empty"><p>Add time zones in settings</p></article>';
+    return;
+  }
+
+  const now = new Date();
+  container.innerHTML = saved.map((tz) => {
+    const time = new Intl.DateTimeFormat([], { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: tz.zone }).format(now);
+    const day = isDaytime(tz.zone);
+    const offset = tzOffset(tz.zone);
+    return `<article>
+      <div>
+        <strong>${escapeHtml(tz.label)}</strong>
+        <span>${escapeHtml(tz.short || "")}${offset ? ` (${escapeHtml(offset)})` : ""}</span>
+      </div>
+      <b>${time}</b>
+      <i${day ? ' class="is-day"' : ""}>${day ? "Day" : "Night"}</i>
+    </article>`;
+  }).join("");
 }
 
 boot();

@@ -92,38 +92,9 @@
             <span>World clock</span>
             <h2>Local overlap</h2>
           </div>
-          <div class="time-list">
-            <article>
-              <div>
-                <strong>Thailand</strong>
-                <span>ICT (UTC+7)</span>
-              </div>
-              <b id="timeThailand">--:--</b>
-              <i class="is-day">Day</i>
-            </article>
-            <article>
-              <div>
-                <strong>UK</strong>
-                <span>GMT (UTC+0)</span>
-              </div>
-              <b id="timeUk">--:--</b>
-              <i>Night</i>
-            </article>
-            <article>
-              <div>
-                <strong>Hong Kong</strong>
-                <span>HKT (UTC+8)</span>
-              </div>
-              <b id="timeHongKong">--:--</b>
-              <i class="is-day">Day</i>
-            </article>
-            <article>
-              <div>
-                <strong>Canada</strong>
-                <span>EST (UTC-5)</span>
-              </div>
-              <b id="timeCanada">--:--</b>
-              <i>Night</i>
+          <div id="timeList" class="time-list">
+            <article class="time-empty">
+              <p>Add time zones in settings</p>
             </article>
           </div>
         </aside>
@@ -246,6 +217,26 @@
           <h2 id="settingsTitle">Settings</h2>
           <p>Manage your dashboard preferences and system integration.</p>
         </header>
+
+        <section class="settings-section" aria-labelledby="tzSettingsTitle">
+          <div class="settings-section-title">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"></path>
+              <path d="M2 12h20"></path>
+            </svg>
+            <h3 id="tzSettingsTitle">World Clock</h3>
+          </div>
+
+          <div class="tz-manager">
+            <div class="tz-search-wrap">
+              <input id="tzSearch" class="tz-search" type="text" placeholder="Search by city, country, GMT, UTC…" autocomplete="off" aria-label="Search time zones" />
+              <div id="tzDropdown" class="tz-dropdown" hidden></div>
+            </div>
+            <div id="tzList" class="tz-list"></div>
+            <p class="tz-hint">Up to 6 time zones. Remove and re-add to reorder.</p>
+          </div>
+        </section>
 
         <section class="settings-section" aria-labelledby="themeSettingsTitle">
           <div class="settings-section-title">

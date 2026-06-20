@@ -8,4 +8,4 @@
 *.key
 /tools/claude-usage/
 CODE_REVIEW.md
-CODE_REVIEW_VERIFICATION.md
+/localDocs/
