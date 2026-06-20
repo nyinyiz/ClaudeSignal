@@ -322,8 +322,18 @@ function renderHistory() {
   const hasTurns = (history.turns || 0) > 0;
   panel.classList.toggle("history-empty", !hasTurns);
   $("historyUpdated").textContent = hasTurns ? `Scanned ${relativeTime(history.generatedAt)}` : "No transcripts";
+  const noteLines = [];
+  if (hasTurns) {
+    noteLines.push(`${history.transcriptFiles} transcript files · ${history.turns} assistant turns`);
+    if (history.unpricedModels && history.unpricedModels.length > 0) {
+      noteLines.push(`Cost estimates missing for: ${history.unpricedModels.join(", ")}`);
+    }
+    if (history.pricingUpdated) {
+      noteLines.push(`Pricing table last verified: ${history.pricingUpdated}`);
+    }
+  }
   $("historyNote").textContent = hasTurns
-    ? `${history.transcriptFiles} transcript files · ${history.turns} assistant turns`
+    ? noteLines.join(" · ")
     : "No Claude Code usage transcripts found on this Mac yet.";
 
   renderHistoryTotals("historyToday", history.today);

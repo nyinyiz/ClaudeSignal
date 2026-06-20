@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::{BTreeMap, BTreeSet, HashMap},
     fs,
     path::{Path, PathBuf},
 };
@@ -66,6 +66,8 @@ pub struct UsageHistorySnapshot {
     pub daily_activity: Vec<DailyActivity>,
     pub weekly_activity: Vec<DailyActivity>,
     pub monthly_activity: Vec<DailyActivity>,
+    pub pricing_updated: String,
+    pub unpriced_models: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -241,10 +243,14 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         })
         .collect();
     let mut sessions: HashMap<String, SessionAggregate> = HashMap::new();
+    let mut unpriced_models: BTreeSet<String> = BTreeSet::new();
     let mut seen_turns = 0;
 
     for turn in &turns {
         seen_turns += 1;
+        if turn.model != "unknown" && pricing_for_model(&turn.model).is_none() {
+            unpriced_models.insert(turn.model.clone());
+        }
         let turn_date = turn
             .timestamp
             .map(|timestamp| timestamp.with_timezone(&Local).date_naive());
@@ -368,6 +374,8 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>) -> UsageHistor
         daily_activity,
         weekly_activity,
         monthly_activity,
+        pricing_updated: PRICING_UPDATED.to_string(),
+        unpriced_models: unpriced_models.into_iter().collect(),
     }
 }
 
@@ -409,6 +417,11 @@ struct Pricing {
     cache_creation: f64,
 }
 
+/// Last verified date for the pricing table below.
+/// Update this whenever you verify prices against https://docs.anthropic.com/en/docs/about-claude/pricing
+pub const PRICING_UPDATED: &str = "2025-06-20";
+
+/// Prices are per million tokens (USD).
 fn pricing_for_model(model: &str) -> Option<Pricing> {
     let lower = model.to_lowercase();
     if lower.contains("fable") || lower.contains("mythos") {
@@ -420,10 +433,10 @@ fn pricing_for_model(model: &str) -> Option<Pricing> {
         })
     } else if lower.contains("opus") {
         Some(Pricing {
-            input: 5.0,
-            output: 25.0,
-            cache_read: 0.5,
-            cache_creation: 6.25,
+            input: 15.0,
+            output: 75.0,
+            cache_read: 1.5,
+            cache_creation: 18.75,
         })
     } else if lower.contains("sonnet") {
         Some(Pricing {
@@ -434,10 +447,10 @@ fn pricing_for_model(model: &str) -> Option<Pricing> {
         })
     } else if lower.contains("haiku") {
         Some(Pricing {
-            input: 1.0,
-            output: 5.0,
-            cache_read: 0.1,
-            cache_creation: 1.25,
+            input: 0.8,
+            output: 4.0,
+            cache_read: 0.08,
+            cache_creation: 1.0,
         })
     } else {
         None
