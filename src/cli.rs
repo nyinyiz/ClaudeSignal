@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand, ValueEnum};
     about = "Local Claude CLI live status monitor"
 )]
 pub struct Cli {
-    #[arg(long, default_value = "127.0.0.1")]
+    #[arg(long, default_value = "0.0.0.0")]
     pub host: String,
     #[arg(short, long, default_value_t = 3000)]
     pub port: u16,
