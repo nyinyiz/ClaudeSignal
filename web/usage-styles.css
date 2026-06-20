@@ -60,6 +60,10 @@
   padding-bottom: 40px;
 }
 
+.usage-page-content[hidden] {
+  display: none;
+}
+
 /* Summary row */
 
 .usage-page-summary {
@@ -132,59 +136,69 @@
   font-weight: 700;
 }
 
-/* Token breakdown */
+.usage-page-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+/* Token breakdown — vivid distinct colors */
 
 .token-breakdown {
   display: grid;
-  gap: 16px;
+  gap: 20px;
 }
 
 .breakdown-bar {
   display: flex;
-  height: 28px;
+  height: 36px;
   overflow: hidden;
-  border-radius: 8px;
-  gap: 2px;
+  border-radius: 10px;
+  gap: 3px;
 }
 
 .breakdown-seg {
-  min-width: 4px;
-  border-radius: 4px;
+  min-width: 6px;
+  border-radius: 6px;
   transition: flex 0.3s ease;
+  cursor: default;
 }
 
-.seg-input { background: var(--primary-2); }
-.seg-output { background: var(--green); }
-.seg-cache-read { background: var(--primary); opacity: 0.6; }
-.seg-cache-write { background: var(--danger); opacity: 0.7; }
+.seg-input { background: #5b8def; }
+.seg-output { background: #f06292; }
+.seg-cache-read { background: #4dd0a1; }
+.seg-cache-write { background: #ffb74d; }
 
 .breakdown-legend {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
 .breakdown-legend-item {
-  display: grid;
-  grid-template-columns: 10px 1fr;
-  grid-template-rows: auto auto;
-  column-gap: 8px;
-  row-gap: 2px;
-  align-items: center;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .breakdown-dot {
-  grid-row: 1 / -1;
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin-top: 2px;
+  border-radius: 4px;
+}
+
+.breakdown-legend-text {
+  display: grid;
+  gap: 1px;
 }
 
 .breakdown-label {
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 0.66rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -192,12 +206,11 @@
 .breakdown-legend-item strong {
   color: var(--text);
   font-family: var(--mono);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 800;
 }
 
 .breakdown-legend-item em {
-  grid-column: 2;
   color: var(--faint);
   font-family: var(--mono);
   font-size: 0.68rem;
@@ -205,72 +218,148 @@
   font-weight: 600;
 }
 
-/* Tables */
+/* Visual rows (models, projects, cost) */
 
-.usage-page-table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.visual-list {
+  display: grid;
+  gap: 18px;
 }
 
-.usage-page-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-size: 0.78rem;
+.vrow {
+  display: grid;
+  gap: 6px;
 }
 
-.usage-page-table thead th {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-align: left;
-  text-transform: uppercase;
-  white-space: nowrap;
+.vrow-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.usage-page-table thead th.num {
-  text-align: right;
-}
-
-.usage-page-table tbody td {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line-soft);
+.vrow-head strong {
   color: var(--text);
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.usage-page-table tbody td.num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.vrow-value {
+  flex-shrink: 0;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.88rem;
+  font-weight: 800;
 }
 
-.usage-page-table tbody td strong {
+.vrow-bar {
+  height: 10px;
+  background: var(--track);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.vrow-fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+.model-fill {
+  background: linear-gradient(90deg, #5b8def, #7c6cf0);
+}
+
+.project-fill {
+  background: linear-gradient(90deg, #4dd0a1, #3ab5c0);
+}
+
+.cost-fill {
+  background: linear-gradient(90deg, #f06292, #e84393);
+}
+
+.vrow-meta {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+/* Session cards */
+
+.session-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.session-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.session-card:hover {
+  border-color: var(--line);
+  background: var(--panel-2);
+}
+
+.session-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session-card-top code {
+  color: var(--primary);
+  font-family: var(--mono);
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
-.usage-page-table tbody td code {
-  color: var(--primary);
-  font-size: 0.74rem;
+.session-card-time {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
 }
 
-.usage-page-table tbody tr:hover {
-  background: rgba(255, 215, 169, 0.03);
+.session-card-project {
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
-.share-badge {
-  display: inline-block;
-  min-width: 42px;
-  padding: 2px 6px;
-  border: 1px solid var(--line-soft);
-  border-radius: 6px;
-  color: var(--primary);
+.session-card-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.session-card-stats span {
+  color: var(--muted);
+  font-family: var(--mono);
   font-size: 0.7rem;
-  font-weight: 800;
-  text-align: center;
+  font-weight: 700;
+}
+
+.session-card-model {
+  color: var(--faint);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .empty-note {
@@ -286,6 +375,10 @@
 @media (max-width: 900px) {
   .usage-page-summary {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .usage-page-two-col {
+    grid-template-columns: 1fr;
   }
 
   .breakdown-legend {
@@ -304,5 +397,9 @@
 
   .breakdown-legend {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .session-grid {
+    grid-template-columns: 1fr;
   }
 }

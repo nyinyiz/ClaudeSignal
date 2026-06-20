@@ -76,75 +76,41 @@
           <div id="tokenBreakdown" class="token-breakdown"></div>
         </section>
 
-        <!-- Full model list -->
-        <section class="usage-page-card" aria-label="All models">
+        <!-- Cost by model (visual) -->
+        <section class="usage-page-card" aria-label="Cost by model">
           <div class="usage-page-card-header">
-            <h2>Models</h2>
-            <span id="modelCount" class="usage-page-subtitle">--</span>
+            <h2>Cost by Model</h2>
+            <span id="modelCostTotal" class="usage-page-subtitle">--</span>
           </div>
-          <div class="usage-page-table-wrap">
-            <table class="usage-page-table" id="modelTable">
-              <thead>
-                <tr>
-                  <th>Model</th>
-                  <th class="num">Input</th>
-                  <th class="num">Output</th>
-                  <th class="num">Cache Read</th>
-                  <th class="num">Cache Write</th>
-                  <th class="num">Turns</th>
-                  <th class="num">Cost</th>
-                  <th class="num">Share</th>
-                </tr>
-              </thead>
-              <tbody id="modelBody"></tbody>
-            </table>
-          </div>
+          <div id="costByModel" class="visual-list"></div>
         </section>
 
-        <!-- Full project list -->
-        <section class="usage-page-card" aria-label="All projects">
-          <div class="usage-page-card-header">
-            <h2>Projects</h2>
-            <span id="projectCount" class="usage-page-subtitle">--</span>
-          </div>
-          <div class="usage-page-table-wrap">
-            <table class="usage-page-table" id="projectTable">
-              <thead>
-                <tr>
-                  <th>Project</th>
-                  <th class="num">Tokens</th>
-                  <th class="num">Turns</th>
-                  <th class="num">Cost</th>
-                  <th class="num">Share</th>
-                </tr>
-              </thead>
-              <tbody id="projectBody"></tbody>
-            </table>
-          </div>
-        </section>
+        <!-- Models + Projects side by side -->
+        <div class="usage-page-two-col">
+          <section class="usage-page-card" aria-label="All models">
+            <div class="usage-page-card-header">
+              <h2>Models</h2>
+              <span id="modelCount" class="usage-page-subtitle">--</span>
+            </div>
+            <div id="modelList" class="visual-list"></div>
+          </section>
 
-        <!-- Full session list -->
-        <section class="usage-page-card" aria-label="All sessions">
+          <section class="usage-page-card" aria-label="All projects">
+            <div class="usage-page-card-header">
+              <h2>Projects</h2>
+              <span id="projectCount" class="usage-page-subtitle">--</span>
+            </div>
+            <div id="projectList" class="visual-list"></div>
+          </section>
+        </div>
+
+        <!-- Sessions -->
+        <section class="usage-page-card" aria-label="Recent sessions">
           <div class="usage-page-card-header">
             <h2>Recent Sessions</h2>
             <span id="sessionCount" class="usage-page-subtitle">--</span>
           </div>
-          <div class="usage-page-table-wrap">
-            <table class="usage-page-table" id="sessionTable">
-              <thead>
-                <tr>
-                  <th>Session</th>
-                  <th>Project</th>
-                  <th>Model</th>
-                  <th class="num">Tokens</th>
-                  <th class="num">Turns</th>
-                  <th class="num">Cost</th>
-                  <th class="num">Last Active</th>
-                </tr>
-              </thead>
-              <tbody id="sessionBody"></tbody>
-            </table>
-          </div>
+          <div id="sessionList" class="session-grid"></div>
         </section>
       </div>
     </main>

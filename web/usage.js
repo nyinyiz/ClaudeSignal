@@ -38,6 +38,7 @@ function render(data) {
 
   renderSummary(data);
   renderTokenBreakdown(data.allTime);
+  renderCostByModel(data.byModel);
   renderModels(data.byModel, data.allTime);
   renderProjects(data.topProjects, data.allTime);
   renderSessions(data.recentSessions);
@@ -51,15 +52,16 @@ function renderSummary(data) {
   $("summaryAllTokens").textContent = fmtTokens(data.allTime);
   $("summaryAllMeta").textContent = `${fmtNum(data.allTime?.turns || 0)} turns · ${fmtCost(data.allTime?.estimatedCostUsd || 0)}`;
   $("summaryFiles").textContent = `${data.transcriptFiles}`;
-  const pricingParts = [];
-  if (data.pricingUpdated) pricingParts.push(`Prices: ${data.pricingUpdated}`);
+  const parts = [];
+  if (data.pricingUpdated) parts.push(`Prices: ${data.pricingUpdated}`);
   if (data.unpricedModels && data.unpricedModels.length > 0) {
-    pricingParts.push(`Unpriced: ${data.unpricedModels.join(", ")}`);
+    parts.push(`Unpriced: ${data.unpricedModels.join(", ")}`);
   }
-  $("summaryPricing").textContent = pricingParts.join(" · ") || "Cost estimates included";
+  $("summaryPricing").textContent = parts.join(" · ") || "Cost estimates included";
 }
 
 function renderTokenBreakdown(totals) {
+  const container = $("tokenBreakdown");
   if (!totals) return;
   const input = totals.inputTokens || 0;
   const output = totals.outputTokens || 0;
@@ -67,7 +69,7 @@ function renderTokenBreakdown(totals) {
   const cacheWrite = totals.cacheCreationTokens || 0;
   const total = input + output + cacheRead + cacheWrite;
   if (total === 0) {
-    $("tokenBreakdown").innerHTML = '<p class="empty-note">No token data yet.</p>';
+    container.innerHTML = '<p class="empty-note">No token data yet.</p>';
     return;
   }
 
@@ -80,7 +82,7 @@ function renderTokenBreakdown(totals) {
 
   const barHtml = segments
     .filter((s) => s.value > 0)
-    .map((s) => `<div class="breakdown-seg ${s.cls}" style="flex:${s.value}"></div>`)
+    .map((s) => `<div class="breakdown-seg ${s.cls}" style="flex:${s.value}" title="${s.label}: ${fmtNum(s.value)}"></div>`)
     .join("");
 
   const legendHtml = segments
@@ -88,41 +90,74 @@ function renderTokenBreakdown(totals) {
       const pct = total > 0 ? ((s.value / total) * 100).toFixed(1) : "0.0";
       return `<div class="breakdown-legend-item">
         <span class="breakdown-dot ${s.cls}"></span>
-        <span class="breakdown-label">${s.label}</span>
-        <strong>${fmtNum(s.value)}</strong>
-        <em>${pct}%</em>
+        <div class="breakdown-legend-text">
+          <span class="breakdown-label">${s.label}</span>
+          <strong>${fmtNum(s.value)}</strong>
+          <em>${pct}%</em>
+        </div>
       </div>`;
     })
     .join("");
 
-  $("tokenBreakdown").innerHTML = `
+  container.innerHTML = `
     <div class="breakdown-bar">${barHtml}</div>
     <div class="breakdown-legend">${legendHtml}</div>
   `;
 }
 
+function renderCostByModel(models) {
+  const container = $("costByModel");
+  const totalCost = models.reduce((sum, m) => sum + (m.totals.estimatedCostUsd || 0), 0);
+  $("modelCostTotal").textContent = fmtCost(totalCost);
+
+  if (!models.length || totalCost === 0) {
+    container.innerHTML = '<p class="empty-note">No cost data yet.</p>';
+    return;
+  }
+
+  const maxCost = Math.max(...models.map((m) => m.totals.estimatedCostUsd || 0));
+  container.innerHTML = models
+    .filter((m) => (m.totals.estimatedCostUsd || 0) > 0)
+    .map((m) => {
+      const cost = m.totals.estimatedCostUsd || 0;
+      const pct = Math.max(4, (cost / maxCost) * 100);
+      const share = ((cost / totalCost) * 100).toFixed(1);
+      return `<div class="vrow">
+        <div class="vrow-head">
+          <strong>${esc(m.model)}</strong>
+          <span class="vrow-value">${fmtCost(cost)}</span>
+        </div>
+        <div class="vrow-bar"><i class="vrow-fill cost-fill" style="width:${pct}%"></i></div>
+        <div class="vrow-meta">${share}% of total · ${fmtNum(m.totals.turns)} turns</div>
+      </div>`;
+    })
+    .join("");
+}
+
 function renderModels(models, allTime) {
   const totalTokens = tokTotal(allTime);
   $("modelCount").textContent = `${models.length} model${models.length !== 1 ? "s" : ""}`;
-  const tbody = $("modelBody");
+  const container = $("modelList");
   if (!models.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty-note">No model data</td></tr>';
+    container.innerHTML = '<p class="empty-note">No model data.</p>';
     return;
   }
-  tbody.innerHTML = models
+
+  const maxTokens = Math.max(...models.map((m) => tokTotal(m.totals)));
+  container.innerHTML = models
     .map((m) => {
       const t = m.totals;
-      const share = totalTokens > 0 ? ((tokTotal(t) / totalTokens) * 100).toFixed(1) : "0.0";
-      return `<tr>
-        <td><strong>${esc(m.model)}</strong></td>
-        <td class="num">${fmtNum(t.inputTokens)}</td>
-        <td class="num">${fmtNum(t.outputTokens)}</td>
-        <td class="num">${fmtNum(t.cacheReadTokens)}</td>
-        <td class="num">${fmtNum(t.cacheCreationTokens)}</td>
-        <td class="num">${fmtNum(t.turns)}</td>
-        <td class="num">${fmtCost(t.estimatedCostUsd)}</td>
-        <td class="num"><span class="share-badge">${share}%</span></td>
-      </tr>`;
+      const tokens = tokTotal(t);
+      const pct = Math.max(4, (tokens / maxTokens) * 100);
+      const share = totalTokens > 0 ? ((tokens / totalTokens) * 100).toFixed(1) : "0.0";
+      return `<div class="vrow">
+        <div class="vrow-head">
+          <strong>${esc(m.model)}</strong>
+          <span class="vrow-value">${fmtNum(tokens)}</span>
+        </div>
+        <div class="vrow-bar"><i class="vrow-fill model-fill" style="width:${pct}%"></i></div>
+        <div class="vrow-meta">${share}% · ${fmtNum(t.turns)} turns · ${fmtCost(t.estimatedCostUsd)}</div>
+      </div>`;
     })
     .join("");
 }
@@ -130,45 +165,55 @@ function renderModels(models, allTime) {
 function renderProjects(projects, allTime) {
   const totalTokens = tokTotal(allTime);
   $("projectCount").textContent = `${projects.length} project${projects.length !== 1 ? "s" : ""}`;
-  const tbody = $("projectBody");
+  const container = $("projectList");
   if (!projects.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-note">No project data</td></tr>';
+    container.innerHTML = '<p class="empty-note">No project data.</p>';
     return;
   }
-  tbody.innerHTML = projects
+
+  const maxTokens = Math.max(...projects.map((p) => tokTotal(p.totals)));
+  container.innerHTML = projects
     .map((p) => {
       const t = p.totals;
-      const share = totalTokens > 0 ? ((tokTotal(t) / totalTokens) * 100).toFixed(1) : "0.0";
-      return `<tr>
-        <td><strong>${esc(p.project)}</strong></td>
-        <td class="num">${fmtNum(tokTotal(t))}</td>
-        <td class="num">${fmtNum(t.turns)}</td>
-        <td class="num">${fmtCost(t.estimatedCostUsd)}</td>
-        <td class="num"><span class="share-badge">${share}%</span></td>
-      </tr>`;
+      const tokens = tokTotal(t);
+      const pct = Math.max(4, (tokens / maxTokens) * 100);
+      const share = totalTokens > 0 ? ((tokens / totalTokens) * 100).toFixed(1) : "0.0";
+      return `<div class="vrow">
+        <div class="vrow-head">
+          <strong>${esc(p.project)}</strong>
+          <span class="vrow-value">${fmtNum(tokens)}</span>
+        </div>
+        <div class="vrow-bar"><i class="vrow-fill project-fill" style="width:${pct}%"></i></div>
+        <div class="vrow-meta">${share}% · ${fmtNum(t.turns)} turns · ${fmtCost(t.estimatedCostUsd)}</div>
+      </div>`;
     })
     .join("");
 }
 
 function renderSessions(sessions) {
   $("sessionCount").textContent = `${sessions.length} session${sessions.length !== 1 ? "s" : ""}`;
-  const tbody = $("sessionBody");
+  const container = $("sessionList");
   if (!sessions.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-note">No sessions</td></tr>';
+    container.innerHTML = '<p class="empty-note">No sessions.</p>';
     return;
   }
-  tbody.innerHTML = sessions
+
+  container.innerHTML = sessions
     .map((s) => {
       const t = s.totals;
-      return `<tr>
-        <td><code>${esc(s.sessionId)}</code></td>
-        <td>${esc(shortProject(s.project))}</td>
-        <td>${esc(s.model || "--")}</td>
-        <td class="num">${fmtNum(tokTotal(t))}</td>
-        <td class="num">${fmtNum(t.turns)}</td>
-        <td class="num">${fmtCost(t.estimatedCostUsd)}</td>
-        <td class="num">${relativeTime(s.lastActivityAt)}</td>
-      </tr>`;
+      return `<div class="session-card">
+        <div class="session-card-top">
+          <code>${esc(s.sessionId)}</code>
+          <span class="session-card-time">${relativeTime(s.lastActivityAt)}</span>
+        </div>
+        <div class="session-card-project">${esc(shortProject(s.project))}</div>
+        <div class="session-card-stats">
+          <span>${fmtNum(tokTotal(t))} tok</span>
+          <span>${fmtNum(t.turns)} turns</span>
+          <span>${fmtCost(t.estimatedCostUsd)}</span>
+        </div>
+        <div class="session-card-model">${esc(s.model || "unknown")}</div>
+      </div>`;
     })
     .join("");
 }
