@@ -39,107 +39,268 @@
       </header>
 
       <div id="loadingState" class="usage-page-loading">
-        <p>Scanning transcripts…</p>
+        <div class="shimmer-grid">
+          <div class="shimmer-block shimmer-block--hero"></div>
+          <div class="shimmer-block shimmer-block--chart"></div>
+          <div class="shimmer-block shimmer-block--side"></div>
+          <div class="shimmer-block shimmer-block--side"></div>
+          <div class="shimmer-block shimmer-block--full"></div>
+        </div>
+        <p class="shimmer-text">Scanning transcripts…</p>
       </div>
 
       <div id="pageContent" class="usage-page-content" hidden>
-        <!-- Summary row -->
-        <section class="usage-page-summary" aria-label="Usage summary">
-          <article>
+
+      <!-- Hero metric strip -->
+      <section class="metric-strip reveal" aria-label="Key metrics">
+        <div class="metric-tile">
+          <div class="metric-tile-header">
             <span>Today</span>
-            <strong id="summaryTodayTokens">--</strong>
-            <p id="summaryTodayMeta">--</p>
-          </article>
-          <article>
+            <span id="summaryTodayDelta" class="metric-delta"></span>
+          </div>
+          <strong id="summaryTodayTokens">--</strong>
+          <p id="summaryTodayMeta">--</p>
+          <div id="sparkToday" class="sparkline-inline"></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-header">
             <span>This week</span>
-            <strong id="summaryWeekTokens">--</strong>
-            <p id="summaryWeekMeta">--</p>
-          </article>
-          <article>
+            <span id="summaryWeekDelta" class="metric-delta"></span>
+          </div>
+          <strong id="summaryWeekTokens">--</strong>
+          <p id="summaryWeekMeta">--</p>
+          <div id="sparkWeek" class="sparkline-inline"></div>
+        </div>
+        <div class="metric-tile">
+          <div class="metric-tile-header">
             <span>All time</span>
-            <strong id="summaryAllTokens">--</strong>
-            <p id="summaryAllMeta">--</p>
-          </article>
-          <article>
-            <span>Transcript files</span>
-            <strong id="summaryFiles">--</strong>
-            <p id="summaryPricing">--</p>
-          </article>
+          </div>
+          <strong id="summaryAllTokens">--</strong>
+          <p id="summaryAllMeta">--</p>
+          <div id="sparkAll" class="sparkline-inline"></div>
+        </div>
+        <div class="metric-tile metric-tile--muted">
+          <div class="metric-tile-header">
+            <span>Transcripts</span>
+          </div>
+          <strong id="summaryFiles">--</strong>
+          <p id="summaryPricing">--</p>
+        </div>
+      </section>
+
+        <!-- Activity chart — featured card -->
+        <section class="panel panel--featured reveal" aria-label="Activity chart">
+          <div class="panel-head">
+            <h2>Activity</h2>
+            <div class="chart-controls">
+              <div class="chart-toggles" role="tablist" aria-label="Chart view">
+                <button id="chartTabTokens" class="chart-tab is-active" role="tab" aria-selected="true" data-view="tokens">Tokens</button>
+                <button id="chartTabCost" class="chart-tab" role="tab" aria-selected="false" data-view="cost">Cost</button>
+              </div>
+              <div class="chart-toggles" role="tablist" aria-label="Time range">
+                <button id="rangeTab7d" class="chart-tab is-active" role="tab" aria-selected="true" data-range="7d">7d</button>
+                <button id="rangeTab4w" class="chart-tab" role="tab" aria-selected="false" data-range="4w">4w</button>
+                <button id="rangeTab6m" class="chart-tab" role="tab" aria-selected="false" data-range="6m">6m</button>
+              </div>
+            </div>
+          </div>
+          <div class="activity-chart-wrapper">
+            <div id="chartYAxis" class="chart-y-axis" aria-hidden="true"></div>
+            <div id="activityChart" class="activity-chart" role="img" aria-label="Activity chart">
+              <svg viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="usageTokensGradient" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="var(--primary-2)" stop-opacity="0.35"/>
+                    <stop offset="100%" stop-color="var(--primary-2)" stop-opacity="0"/>
+                  </linearGradient>
+                  <filter id="chartGlow">
+                    <feGaussianBlur stdDeviation="4" result="blur"/>
+                    <feMerge>
+                      <feMergeNode in="blur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                <g class="chart-grid-lines">
+                  <line x1="0" y1="55" x2="1000" y2="55"/>
+                  <line x1="0" y1="110" x2="1000" y2="110"/>
+                  <line x1="0" y1="165" x2="1000" y2="165"/>
+                </g>
+                <path id="usageArea" class="chart-area"></path>
+                <path id="usageLine" class="chart-line" filter="url(#chartGlow)"></path>
+                <g id="usageBars"></g>
+                <g id="usageDots"></g>
+                <g id="usageValueLabels"></g>
+              </svg>
+              <div id="usageDays" class="chart-days"></div>
+              <div id="chartTooltip" class="chart-tooltip" hidden></div>
+            </div>
+          </div>
         </section>
 
-        <!-- Token type breakdown -->
-        <section class="usage-page-card" aria-label="Token type breakdown">
-          <div class="usage-page-card-header">
+        <!-- Token breakdown — featured card -->
+        <section class="panel panel--accent panel--accent-blue reveal" aria-label="Token type breakdown">
+          <div class="panel-head">
             <h2>Token Breakdown</h2>
-            <span class="usage-page-subtitle">All time by type</span>
+            <span class="panel-sub">All time by type</span>
           </div>
           <div id="tokenBreakdown" class="token-breakdown"></div>
         </section>
 
-        <!-- Trends: Today vs Yesterday, This Week vs Last Week -->
-        <div class="usage-page-two-col">
-          <section class="usage-page-card" aria-label="Today vs yesterday">
-            <div class="usage-page-card-header">
-              <h2>Today vs Yesterday</h2>
-              <span id="trendDayBadge" class="usage-page-subtitle">--</span>
-            </div>
-            <div id="trendDay" class="trend-compare"></div>
-          </section>
-
-          <section class="usage-page-card" aria-label="This week vs last week">
-            <div class="usage-page-card-header">
-              <h2>This Week vs Last Week</h2>
-              <span id="trendWeekBadge" class="usage-page-subtitle">--</span>
-            </div>
-            <div id="trendWeek" class="trend-compare"></div>
-          </section>
-        </div>
-
-        <!-- Cost by model (visual) -->
-        <section class="usage-page-card" aria-label="Cost by model">
-          <div class="usage-page-card-header">
-            <h2>Cost by Model</h2>
-            <span id="modelCostTotal" class="usage-page-subtitle">--</span>
+        <!-- Daily Comparison: Today vs Yesterday -->
+        <section class="panel panel--accent panel--accent-warm reveal" aria-label="Daily comparison">
+          <div class="panel-head">
+            <h2>Daily Comparison</h2>
+            <span class="panel-sub">Today vs Yesterday</span>
           </div>
-          <div id="costByModel" class="visual-list"></div>
+          <div class="comparison-chart-wrap">
+            <div class="comparison-legend">
+              <span class="legend-item"><i class="legend-dot legend-current"></i> Today</span>
+              <span class="legend-item"><i class="legend-dot legend-previous"></i> Yesterday</span>
+            </div>
+            <div class="comparison-chart-area">
+              <div id="dailyYAxis" class="chart-y-axis" aria-hidden="true"></div>
+              <div id="dailyChart" class="comparison-chart" role="img" aria-label="Daily comparison chart">
+                <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="dailyCurrentGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#76e1ff" stop-opacity="0.3"/>
+                      <stop offset="100%" stop-color="#76e1ff" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="dailyPreviousGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#ffb95a" stop-opacity="0.15"/>
+                      <stop offset="100%" stop-color="#ffb95a" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="dailyGlow">
+                      <feGaussianBlur stdDeviation="3" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <g class="chart-grid-lines">
+                    <line x1="0" y1="50" x2="1000" y2="50"/>
+                    <line x1="0" y1="100" x2="1000" y2="100"/>
+                    <line x1="0" y1="150" x2="1000" y2="150"/>
+                  </g>
+                  <path id="dailyPrevArea" class="comparison-area"></path>
+                  <path id="dailyCurrArea" class="comparison-area"></path>
+                  <path id="dailyPrevLine" class="comparison-line comparison-line--prev"></path>
+                  <path id="dailyCurrLine" class="comparison-line comparison-line--curr" filter="url(#dailyGlow)"></path>
+                  <g id="dailyDots"></g>
+                </svg>
+                <div id="dailyLabels" class="chart-days"></div>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-summary" id="dailySummary"></div>
         </section>
 
-        <!-- Cost Optimization -->
-        <section class="usage-page-card" aria-label="Cost optimization">
-          <div class="usage-page-card-header">
+        <!-- Weekly Comparison: This Week vs Last Week -->
+        <section class="panel panel--accent panel--accent-warm reveal" aria-label="Weekly comparison">
+          <div class="panel-head">
+            <h2>Weekly Comparison</h2>
+            <span class="panel-sub">This Week vs Last Week</span>
+          </div>
+          <div class="comparison-chart-wrap">
+            <div class="comparison-legend">
+              <span class="legend-item"><i class="legend-dot legend-current"></i> This Week</span>
+              <span class="legend-item"><i class="legend-dot legend-previous"></i> Last Week</span>
+            </div>
+            <div class="comparison-chart-area">
+              <div id="weeklyYAxis" class="chart-y-axis" aria-hidden="true"></div>
+              <div id="weeklyChart" class="comparison-chart" role="img" aria-label="Weekly comparison chart">
+                <svg viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="weeklyCurrentGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#76e1ff" stop-opacity="0.3"/>
+                      <stop offset="100%" stop-color="#76e1ff" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="weeklyPreviousGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#ffb95a" stop-opacity="0.15"/>
+                      <stop offset="100%" stop-color="#ffb95a" stop-opacity="0"/>
+                    </linearGradient>
+                    <filter id="weeklyGlow">
+                      <feGaussianBlur stdDeviation="3" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <g class="chart-grid-lines">
+                    <line x1="0" y1="50" x2="1000" y2="50"/>
+                    <line x1="0" y1="100" x2="1000" y2="100"/>
+                    <line x1="0" y1="150" x2="1000" y2="150"/>
+                  </g>
+                  <path id="weeklyPrevArea" class="comparison-area"></path>
+                  <path id="weeklyCurrArea" class="comparison-area"></path>
+                  <path id="weeklyPrevLine" class="comparison-line comparison-line--prev"></path>
+                  <path id="weeklyCurrLine" class="comparison-line comparison-line--curr" filter="url(#weeklyGlow)"></path>
+                  <g id="weeklyDots"></g>
+                </svg>
+                <div id="weeklyLabels" class="chart-days"></div>
+              </div>
+            </div>
+          </div>
+          <div class="comparison-summary" id="weeklySummary"></div>
+        </section>
+
+        <!-- Cost by Model — accent pink -->
+        <section class="panel panel--accent panel--accent-pink reveal" aria-label="Cost by model">
+          <div class="panel-head">
+            <h2>Cost by Model</h2>
+            <span id="modelCostTotal" class="panel-value">--</span>
+          </div>
+          <div id="costByModel" class="bar-list"></div>
+        </section>
+
+        <!-- Cost Optimization — accent green -->
+        <section class="panel panel--accent panel--accent-green reveal" aria-label="Cost optimization">
+          <div class="panel-head">
             <h2>Cost Optimization</h2>
-            <span class="usage-page-subtitle">Model recommendations</span>
+            <span class="panel-sub">Model recommendations</span>
           </div>
           <div id="costOptimization" class="optimization-panel"></div>
         </section>
 
-        <!-- Models + Projects side by side -->
-        <div class="usage-page-two-col">
-          <section class="usage-page-card" aria-label="All models">
-            <div class="usage-page-card-header">
-              <h2>Models</h2>
-              <span id="modelCount" class="usage-page-subtitle">--</span>
+        <!-- Models + Projects — tabbed panel -->
+        <section class="panel panel--accent panel--accent-purple reveal" aria-label="Models and Projects">
+          <div class="panel-head">
+            <div class="tab-group" role="tablist" aria-label="Breakdown view">
+              <button id="tabModels" class="tab-btn is-active" role="tab" aria-selected="true" data-tab="models">Models</button>
+              <button id="tabProjects" class="tab-btn" role="tab" aria-selected="false" data-tab="projects">Projects</button>
             </div>
-            <div id="modelList" class="visual-list"></div>
-          </section>
-
-          <section class="usage-page-card" aria-label="All projects">
-            <div class="usage-page-card-header">
-              <h2>Projects</h2>
-              <span id="projectCount" class="usage-page-subtitle">--</span>
-            </div>
-            <div id="projectList" class="visual-list"></div>
-          </section>
-        </div>
-
-        <!-- Sessions -->
-        <section class="usage-page-card" aria-label="Recent sessions">
-          <div class="usage-page-card-header">
-            <h2>Recent Sessions</h2>
-            <span id="sessionCount" class="usage-page-subtitle">--</span>
+            <span id="tabCount" class="panel-sub">--</span>
           </div>
-          <div id="sessionList" class="session-grid"></div>
+          <div id="modelList" class="tab-content" role="tabpanel"></div>
+          <div id="projectList" class="tab-content" role="tabpanel" hidden></div>
         </section>
+
+        <!-- Recent Sessions — sortable table -->
+        <section class="panel panel--accent panel--accent-neutral reveal" aria-label="Recent sessions">
+          <div class="panel-head">
+            <h2>Recent Sessions</h2>
+            <span id="sessionCount" class="panel-sub">--</span>
+          </div>
+          <div class="session-table-wrap">
+            <table class="session-table" id="sessionTable">
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort="project">Project</th>
+                  <th class="sortable" data-sort="model">Model</th>
+                  <th class="sortable sort-active" data-sort="tokens">Tokens</th>
+                  <th class="sortable" data-sort="turns">Turns</th>
+                  <th class="sortable" data-sort="cost">Cost</th>
+                  <th class="sortable" data-sort="time">Time</th>
+                </tr>
+              </thead>
+              <tbody id="sessionTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
       </div>
     </main>
 
@@ -151,6 +312,6 @@
       <p><a href="/">Back to dashboard</a></p>
     </footer>
 
-    <script src="/usage.js"></script>
+    <script src="/usage.js?v=3"></script>
   </body>
 </html>

@@ -9,7 +9,8 @@ A local-first Claude Code usage dashboard for macOS. Single Rust binary, no data
 - **Usage totals** — today, this week, all-time tokens and estimated cost
 - **Model & project breakdowns** — see which models and projects consume the most
 - **Activity chart** — tokens or cost view with 7-day, 4-week, and 6-month ranges
-- **Recent sessions** — latest sessions with project, tokens, turns, and cost
+- **Recent sessions** — sortable table with project, model, tokens, turns, cost, and time
+- **Usage analytics page** — detailed breakdowns with daily/weekly comparisons, token type breakdown, cost by model, cost optimization tips, and two-column panel layout
 - **Animated cat** — mood reacts to your daily token usage (sleeping → calm → curious → focus → busy → tired → overload)
 - **Cat speech bubbles** — idle commentary and milestone alerts
 - **World clock** — Thailand, UK, Hong Kong, Canada
