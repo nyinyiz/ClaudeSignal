@@ -365,7 +365,13 @@ function renderDailyComparison() {
 
   let currentData = expandToHours(todayEntry);
   let previousData = expandToHours(yesterdayEntry);
-  
+
+  // Truncate today's data at the current hour — future hours haven't happened yet
+  const currentHour = new Date().getHours();
+  for (let i = currentHour + 1; i < currentData.length; i++) {
+    currentData[i] = 0;
+  }
+
   const labels = Array.from({ length: 24 }, (_, i) => {
     if (i === 0) return "12AM";
     if (i === 12) return "12PM";
@@ -385,9 +391,10 @@ function renderDailyComparison() {
     dotsId: "dailyDots",
     labelsId: "dailyLabels",
     summaryId: "dailySummary",
-    summaryLabel: "Today",
+    summaryLabel: "Today (so far)",
     prevLabel: "Yesterday",
-    maxLabels: 12
+    maxLabels: 12,
+    currentCutoff: currentHour
   });
 }
 
@@ -403,6 +410,13 @@ function renderWeeklyComparison() {
   const currentData = expandToDays(thisWeekEntry);
   const previousData = expandToDays(lastWeekEntry);
 
+  // Truncate this week at the current day (0=Sun in JS, convert to Mon-based index)
+  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, ...
+  const currentDayIndex = jsDay === 0 ? 6 : jsDay - 1; // 0=Mon, 6=Sun
+  for (let i = currentDayIndex + 1; i < currentData.length; i++) {
+    currentData[i] = 0;
+  }
+
   const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   renderDualLineChart({
@@ -417,9 +431,10 @@ function renderWeeklyComparison() {
     dotsId: "weeklyDots",
     labelsId: "weeklyLabels",
     summaryId: "weeklySummary",
-    summaryLabel: "This Week",
+    summaryLabel: "This Week (so far)",
     prevLabel: "Last Week",
-    maxLabels: 7
+    maxLabels: 7,
+    currentCutoff: currentDayIndex
   });
 }
 
@@ -447,7 +462,8 @@ function renderDualLineChart(config) {
   const {
     currentData, previousData, labels,
     yAxisId, lineCurrId, linePrevId, areaCurrId, areaPrevId,
-    dotsId, labelsId, summaryId, summaryLabel, prevLabel, maxLabels
+    dotsId, labelsId, summaryId, summaryLabel, prevLabel, maxLabels,
+    currentCutoff
   } = config;
 
   const currLine = $(lineCurrId);
@@ -497,14 +513,17 @@ function renderDualLineChart(config) {
   const prevGradId = areaPrevId.replace('Area', 'Gradient').replace('Prev', 'Previous');
   prevArea.style.fill = `url(#${prevGradId})`;
 
-  currLine.setAttribute("d", smoothPath(currPoints));
-  currArea.setAttribute("d", areaPath(currPoints, bottom));
+  // If currentCutoff is set, only draw today's line up to that index
+  const visibleCurrPoints = currentCutoff != null ? currPoints.slice(0, currentCutoff + 1) : currPoints;
+
+  currLine.setAttribute("d", smoothPath(visibleCurrPoints));
+  currArea.setAttribute("d", visibleCurrPoints.length > 0 ? areaPath(visibleCurrPoints, bottom) : "");
   const currGradId = areaCurrId.replace('Area', 'Gradient').replace('Curr', 'Current');
   currArea.style.fill = `url(#${currGradId})`;
 
-  // Data dots for current line
+  // Data dots for current line (only up to cutoff)
   if (dotsGroup) {
-    dotsGroup.innerHTML = currPoints
+    dotsGroup.innerHTML = visibleCurrPoints
       .map((p, i) => {
         if (currentData[i] === 0) return "";
         return `<circle class="chart-dot is-visible" cx="${p.x}" cy="${p.y}" r="3"/>`;
@@ -512,8 +531,10 @@ function renderDualLineChart(config) {
       .join("");
   }
 
-  // Summary stats
-  const currTotal = currentData.reduce((s, v) => s + v, 0);
+  // Summary stats — for current data, only sum up to cutoff if set
+  const currTotal = currentCutoff != null
+    ? currentData.slice(0, currentCutoff + 1).reduce((s, v) => s + v, 0)
+    : currentData.reduce((s, v) => s + v, 0);
   const prevTotal = previousData.reduce((s, v) => s + v, 0);
 
   if (summaryEl) {
