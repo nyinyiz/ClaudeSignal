@@ -108,7 +108,7 @@
   --line-soft: rgba(150, 120, 85, 0.18);
   --text: #2b231b;
   --muted: #5f5242;
-  --faint: #907f68;
+  --faint: #7a6a55;
   --primary: #9a6210;
   --primary-2: #c57f1f;
   --green: #1f8f58;
@@ -143,6 +143,30 @@
 
 [data-theme="paper"] .footer {
   background: #eae1d2;
+}
+
+[data-theme="paper"] .delta-badge.delta-up,
+[data-theme="paper"] .metric-delta.delta-up {
+  color: #b02e26;
+  background: rgba(176, 46, 38, 0.1);
+}
+
+[data-theme="paper"] .delta-badge.delta-down,
+[data-theme="paper"] .metric-delta.delta-down {
+  color: #147a48;
+  background: rgba(20, 122, 72, 0.1);
+}
+
+[data-theme="paper"] .session-cost.cost-low {
+  color: #147a48;
+}
+
+[data-theme="paper"] .session-cost.cost-mid {
+  color: #a8600e;
+}
+
+[data-theme="paper"] .session-cost.cost-high {
+  color: #c0392b;
 }
 
 * {
@@ -780,7 +804,7 @@ dt,
 }
 
 .preview-paper i:nth-child(3) {
-  background: #ffffff;
+  background: #e7ddcd;
 }
 
 .theme-card-footer {
