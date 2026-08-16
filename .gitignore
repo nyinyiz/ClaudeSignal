@@ -1,11 +1,40 @@
+# Build artifacts
 /target
+
+# Editors / OS
 /.idea
 /.vscode
 .DS_Store
-/.claude/
+
+# Secrets
 .env*
 *.pem
 *.key
-/tools/claude-usage/
-CODE_REVIEW.md
+
+# AI agent configs & internal workflow — never push these
+/.claude/
+/.mimocode/
+/.opencode/
+/AGENTS.md
+/opencode.json
+/CLAUDE.md
+/CODE_REVIEW.md
+
+# Internal notes / design backlog
 /localDocs/
+/docs/agent-sessions/
+/notes/
+/todo.md
+/TODO.md
+/TASK*.md
+/drafts/
+
+# Personal usage data safety net (never commit Claude transcripts or DBs)
+*.jsonl
+*.db
+*.sqlite
+*.sqlite3
+.claude-signal/
+
+# Embedded third-party tool
+/tools/claude-usage/
