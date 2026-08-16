@@ -27,7 +27,7 @@ const THEME_KEY = "claude-signal-theme";
 const TZ_KEY = "claude-signal-timezones";
 const MAX_TIMEZONES = 6;
 const USAGE_REFRESH_INTERVAL_MS = 10000;
-const THEMES = new Set(["cozy", "matcha", "graphite", "ember"]);
+const THEMES = new Set(["cozy", "matcha", "graphite", "ember", "paper"]);
 const MOOD_THRESHOLDS = [
   { minTokens: 45_000_000, name: "overload", pressure: "critical" },
   { minTokens: 25_000_000, name: "tired", pressure: "high" },
@@ -147,6 +147,7 @@ function themeCardSubtitle(theme) {
     matcha: "Green low-light",
     graphite: "Quiet slate",
     ember: "Warm contrast",
+    paper: "Warm light mode",
   };
   return subtitles[theme] || "Dashboard theme";
 }
