@@ -1,5 +1,5 @@
 const THEME_KEY = "claude-signal-theme";
-const THEMES = new Set(["cozy", "matcha", "graphite", "ember"]);
+const THEMES = new Set(["cozy", "matcha", "graphite", "ember", "paper"]);
 const $ = (id) => document.getElementById(id);
 
 // ── Chart state ──
