@@ -11,6 +11,11 @@ fn write_jsonl(lines: &[&str]) -> NamedTempFile {
     file
 }
 
+fn snapshot_for(file: &NamedTempFile) -> usage_history::UsageHistorySnapshot {
+    let turns = usage_history::parse_jsonl_files(&[file.path().to_path_buf()]);
+    usage_history::build_snapshot(1, turns, &[])
+}
+
 fn assistant_record(session_id: &str, model: &str, input: u64, output: u64) -> String {
     serde_json::json!({
         "type": "assistant",
@@ -55,7 +60,7 @@ fn parses_valid_assistant_records() {
     let line = assistant_record("sess-1", "claude-sonnet-4-20250514", 1000, 200);
     let file = write_jsonl(&[&line]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 1);
     assert_eq!(snapshot.all_time.input_tokens, 1000);
@@ -67,7 +72,7 @@ fn skips_malformed_json_lines() {
     let valid = assistant_record("sess-1", "claude-sonnet-4-20250514", 500, 100);
     let file = write_jsonl(&["not valid json {{{", &valid, "also broken"]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 1);
     assert_eq!(snapshot.all_time.input_tokens, 500);
@@ -84,7 +89,7 @@ fn skips_non_assistant_records() {
     let valid = assistant_record("sess-1", "claude-sonnet-4-20250514", 300, 50);
     let file = write_jsonl(&[&user_record, &valid]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 1);
     assert_eq!(snapshot.all_time.input_tokens, 300);
@@ -112,7 +117,7 @@ fn skips_records_with_zero_tokens() {
     let valid = assistant_record("sess-1", "claude-sonnet-4-20250514", 100, 50);
     let file = write_jsonl(&[&zero, &valid]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 1);
     assert_eq!(snapshot.all_time.input_tokens, 100);
@@ -124,7 +129,7 @@ fn deduplicates_by_message_id() {
     // Same message ID appears twice — should be deduplicated
     let file = write_jsonl(&[&record, &record]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 1);
     assert_eq!(snapshot.all_time.input_tokens, 1000);
@@ -136,7 +141,7 @@ fn records_without_message_id_are_not_deduplicated() {
     let r2 = assistant_record_no_message_id("sess-1", 300, 50);
     let file = write_jsonl(&[&r1, &r2]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 2);
     assert_eq!(snapshot.all_time.input_tokens, 800);
@@ -161,7 +166,7 @@ fn skips_records_missing_required_fields() {
     .to_string();
     let file = write_jsonl(&[&no_session, &no_usage]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 0);
 }
@@ -170,7 +175,7 @@ fn skips_records_missing_required_fields() {
 fn handles_empty_file() {
     let file = write_jsonl(&[]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 0);
     assert_eq!(snapshot.transcript_files, 1);
@@ -181,7 +186,7 @@ fn handles_blank_lines() {
     let valid = assistant_record("sess-1", "claude-sonnet-4-20250514", 100, 50);
     let file = write_jsonl(&["", "  ", &valid, ""]);
 
-    let snapshot = usage_history::scan_paths(&[file.path().to_path_buf()]);
+    let snapshot = snapshot_for(&file);
 
     assert_eq!(snapshot.turns, 1);
 }

@@ -153,8 +153,8 @@ impl AlertManager {
 /// Show a native macOS notification via `osascript`. Failures are logged,
 /// not propagated — notifications are best-effort.
 pub fn notify_macos(title: &str, message: &str) {
-    let escaped_message = message.replace('\\', "\\\\").replace('"', "\\\"");
-    let escaped_title = title.replace('\\', "\\\\").replace('"', "\\\"");
+    let escaped_message = message.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n");
+    let escaped_title = title.replace('\\', "\\\\").replace('"', "\\\"").replace('\n', "\\n");
     let script = format!(
         "display notification \"{escaped_message}\" with title \"{escaped_title}\""
     );
@@ -182,10 +182,14 @@ pub async fn run_watcher(state: AppState) {
     loop {
         tokio::select! {
             event = usage_events.recv() => {
-                if let Ok(ServerEvent::Usage(snapshot)) = event {
-                    for alert in alerts.check_rate_limits(&snapshot, &config).await {
-                        emit(&state, &config, &alert).await;
+                match event {
+                    Ok(ServerEvent::Usage(snapshot)) => {
+                        for alert in alerts.check_rate_limits(&snapshot, &config).await {
+                            emit(&state, &config, &alert).await;
+                        }
                     }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                    _ => {}
                 }
             }
             _ = budget_tick.tick() => {

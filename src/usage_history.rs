@@ -90,7 +90,7 @@ pub struct UsageHistorySnapshot {
 }
 
 #[derive(Debug, Clone)]
-struct TurnUsage {
+pub struct TurnUsage {
     session_id: String,
     timestamp: Option<DateTime<Utc>>,
     model: String,
@@ -188,6 +188,17 @@ fn collect_jsonl_files(dir: &Path, files: &mut Vec<PathBuf>) {
             files.push(path);
         }
     }
+}
+
+/// Parse multiple JSONL files into `TurnUsage` entries, deduplicating by
+/// message ID. This performs no DB interaction — it is the pure-parsing
+/// core of [`scan_paths`].
+pub fn parse_jsonl_files(paths: &[PathBuf]) -> Vec<TurnUsage> {
+    let mut turns = Vec::new();
+    for path in paths {
+        turns.extend(parse_jsonl_file(path));
+    }
+    turns
 }
 
 fn parse_jsonl_file(path: &Path) -> Vec<TurnUsage> {
@@ -303,7 +314,7 @@ fn aggregate_turns_by_day(turns: &[TurnUsage], today: NaiveDate) -> Vec<db::Dail
     map.into_values().collect()
 }
 
-fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>, db_historical: &[db::DailyRow]) -> UsageHistorySnapshot {
+pub fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>, db_historical: &[db::DailyRow]) -> UsageHistorySnapshot {
     let today = Local::now().date_naive();
     let week_start = today - chrono::Duration::days(today.weekday().num_days_from_monday() as i64);
 
