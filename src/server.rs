@@ -25,7 +25,7 @@ impl AppState {
             status_store: Arc::new(StatusStore::new(max_logs)),
             usage_store: Arc::new(UsageStore::new()),
             broadcaster,
-            config: Arc::new(Config::default()),
+            config: Arc::new(Config::load()),
             alerts: Arc::new(AlertManager::new()),
         }
     }

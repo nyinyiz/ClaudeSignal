@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use serde::{Deserialize, Serialize};
 
 /// User-editable configuration loaded from `~/.claude-signal/config.toml`.
@@ -45,6 +47,31 @@ impl Default for AlertsConfig {
         Self {
             rate_limit_warn_percent: 80.0,
             osascript_notifications: true,
+        }
+    }
+}
+
+impl Config {
+    /// Default config file location: `~/.claude-signal/config.toml`.
+    pub fn path() -> PathBuf {
+        let home = std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("."));
+        home.join(".claude-signal").join("config.toml")
+    }
+
+    /// Load the config from disk, falling back to defaults when the file is
+    /// missing or cannot be parsed.
+    pub fn load() -> Self {
+        match std::fs::read_to_string(Self::path()) {
+            Ok(text) => match toml::from_str(&text) {
+                Ok(config) => config,
+                Err(error) => {
+                    tracing::warn!(%error, "failed to parse config file; using defaults");
+                    Config::default()
+                }
+            },
+            Err(_) => Config::default(),
         }
     }
 }

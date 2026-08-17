@@ -1019,8 +1019,8 @@
 
 .alert-toast--visible { opacity: 1; }
 
-.alert-toast--rate-limit { border-left: 3px solid #f59e0b; }
-.alert-toast--daily-budget { border-left: 3px solid #ef4444; }
+.alert-toast--rate_limit { border-left: 3px solid #f59e0b; }
+.alert-toast--daily_budget { border-left: 3px solid #ef4444; }
 
 .alert-toast strong { display: block; margin-bottom: 4px; }
 .alert-toast span { color: var(--muted-foreground); font-size: 0.8rem; }
