@@ -147,7 +147,7 @@ function themeCardSubtitle(theme) {
     matcha: "Green low-light",
     graphite: "Quiet slate",
     ember: "Warm contrast",
-    paper: "Warm light mode",
+    paper: "Warm cream stationery",
   };
   return subtitles[theme] || "Dashboard theme";
 }
