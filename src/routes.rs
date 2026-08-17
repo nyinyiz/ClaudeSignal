@@ -17,6 +17,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/", get(index))
         .route("/styles.css", get(styles))
         .route("/app.js", get(app_js))
+        .route("/themes.js", get(themes_js))
         .route("/usage", get(usage_page))
         .route("/usage.js", get(usage_js))
         .route("/usage-styles.css", get(usage_styles))
@@ -41,6 +42,13 @@ async fn styles() -> Response {
 async fn app_js() -> Response {
     typed_static(
         include_str!("../web/app.js"),
+        "application/javascript; charset=utf-8",
+    )
+}
+
+async fn themes_js() -> Response {
+    typed_static(
+        include_str!("../web/themes.js"),
         "application/javascript; charset=utf-8",
     )
 }

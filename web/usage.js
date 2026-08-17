@@ -1,5 +1,5 @@
 const THEME_KEY = "claude-signal-theme";
-const THEMES = new Set(["cozy", "matcha", "graphite", "ember", "paper"]);
+// THEMES is defined in themes.js (shared across pages)
 const $ = (id) => document.getElementById(id);
 
 // ── Chart state ──
