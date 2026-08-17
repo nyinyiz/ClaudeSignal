@@ -72,6 +72,10 @@ This configures Claude Code to POST live session data to the dashboard while Cla
 
 Rust, Axum, Tokio, static HTML/CSS/JS (no build step)
 
+## Agent Workflow
+
+ClaudeSignal follows a structured AI-assisted engineering workflow defined in [`AGENT-WORKFLOW.md`](AGENT-WORKFLOW.md). Every agent session uses acceptance criteria, quality gates, failure recovery, and parallel reviews — code goes through engineering processes, not around them.
+
 ## Privacy
 
 Everything runs locally. No hosted backend, no telemetry, no uploads. Bind to `0.0.0.0` for LAN access — use only on trusted networks.
