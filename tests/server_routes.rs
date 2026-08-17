@@ -150,3 +150,92 @@ async fn config_route_returns_defaults() {
     assert_eq!(json["alerts"]["rate_limit_warn_percent"], 80.0);
     assert_eq!(json["alerts"]["osascript_notifications"], true);
 }
+
+#[tokio::test]
+async fn health_dashboard_routes_return_expected_types() {
+    let state = AppState::new(200);
+    let app = build_router(state);
+
+    // /health page returns HTML
+    let health_page = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/health")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(health_page.status(), StatusCode::OK);
+    let ct = health_page.headers().get("content-type").unwrap().to_str().unwrap();
+    assert!(ct.contains("text/html"));
+
+    // /health.js returns JavaScript
+    let health_js = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/health.js")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(health_js.status(), StatusCode::OK);
+    let ct = health_js.headers().get("content-type").unwrap().to_str().unwrap();
+    assert!(ct.contains("javascript"));
+
+    // /health-styles.css returns CSS
+    let health_css = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/health-styles.css")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(health_css.status(), StatusCode::OK);
+    let ct = health_css.headers().get("content-type").unwrap().to_str().unwrap();
+    assert!(ct.contains("css"));
+}
+
+#[tokio::test]
+async fn health_metrics_returns_valid_json() {
+    let state = AppState::new(200);
+    let app = build_router(state);
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/api/health/metrics")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let json: Value = serde_json::from_slice(&bytes).unwrap();
+
+    // Check required fields exist and have correct types
+    assert!(json["total_tokens"].is_number());
+    assert!(json["total_input_tokens"].is_number());
+    assert!(json["total_output_tokens"].is_number());
+    assert!(json["total_cache_tokens"].is_number());
+    assert!(json["total_estimated_cost_usd"].is_number());
+    assert!(json["models_used"].is_array());
+    assert!(json["tasks_completed"].is_number());
+    assert!(json["first_pass_success_rate"].is_number());
+    assert!(json["pr_merge_rate"].is_number());
+    assert!(json["human_intervention_rate"].is_number());
+    assert!(json["risk_distribution"].is_object());
+    assert!(json["risk_distribution"]["low"].is_number());
+    assert!(json["risk_distribution"]["medium"].is_number());
+    assert!(json["risk_distribution"]["high"].is_number());
+    assert!(json["findings_high"].is_number());
+    assert!(json["findings_medium"].is_number());
+    assert!(json["findings_low"].is_number());
+}
