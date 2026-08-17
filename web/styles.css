@@ -948,7 +948,7 @@ body.settings-open {
 .state-tile {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, rgba(35, 31, 29, 0.96), rgba(26, 22, 20, 0.98));
+  background: var(--panel);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
 }
 
@@ -1692,8 +1692,8 @@ body.settings-open {
   overflow: hidden;
   padding: 30px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(255, 185, 90, 0.1), transparent 12rem),
-    linear-gradient(180deg, rgba(35, 31, 29, 0.98), rgba(26, 22, 20, 0.99));
+    radial-gradient(circle at 100% 0%, var(--glow-warm), transparent 12rem),
+    var(--panel);
 }
 
 .world-card::before {
@@ -1820,8 +1820,8 @@ body.settings-open {
   padding: 26px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 54% 60%, rgba(255, 185, 90, 0.08), transparent 24rem),
-    linear-gradient(180deg, rgba(35, 31, 29, 0.97), rgba(26, 22, 20, 0.99));
+    radial-gradient(circle at 54% 60%, var(--glow-warm), transparent 24rem),
+    var(--panel);
 }
 
 .activity-header {
@@ -1968,12 +1968,14 @@ body.settings-open {
 
 .state-tile:hover {
   border-color: rgba(255, 215, 169, 0.56);
-  background: linear-gradient(180deg, rgba(46, 41, 39, 0.98), rgba(31, 27, 25, 0.98));
+  background: var(--panel-2);
 }
 
 .state-tile.active {
   border-color: var(--green);
-  background: linear-gradient(180deg, rgba(85, 208, 131, 0.14), rgba(35, 31, 29, 0.98));
+  background:
+    radial-gradient(circle at 50% 72%, rgba(85, 208, 131, 0.14), transparent 14rem),
+    var(--panel);
   color: var(--green);
   box-shadow: 0 18px 60px rgba(85, 208, 131, 0.12);
 }
@@ -2335,8 +2337,8 @@ body.settings-open {
   align-content: start;
   gap: 22px;
   background:
-    radial-gradient(circle at 90% 8%, rgba(255, 185, 90, 0.08), transparent 10rem),
-    linear-gradient(180deg, rgba(35, 31, 29, 0.98), rgba(26, 22, 20, 0.99));
+    radial-gradient(circle at 90% 8%, var(--glow-warm), transparent 10rem),
+    var(--panel);
 }
 
 .recent-header {
@@ -2918,4 +2920,94 @@ dd {
   .mood-aura span {
     animation: none;
   }
+}
+
+/* Skeleton loading states */
+@keyframes skeleton-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--panel-3) 25%,
+    var(--line-soft) 37%,
+    var(--panel-3) 63%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+}
+
+.skeleton-text-sm {
+  height: 11px;
+  width: 60%;
+  margin-bottom: 6px;
+}
+
+.skeleton-heading {
+  height: 22px;
+  width: 55%;
+  margin-bottom: 12px;
+}
+
+.skeleton-stat {
+  height: 36px;
+  width: 100px;
+  margin-bottom: 6px;
+}
+
+.skeleton-chart {
+  height: 120px;
+  width: 100%;
+  border-radius: 12px;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.skeleton-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.skeleton-bar {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.history-skeleton,
+.recent-skeleton,
+.activity-skeleton {
+  padding: 24px;
+}
+
+.history-skeleton .skeleton-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.history-skeleton .skeleton-summary article {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recent-skeleton .skeleton-rows {
+  display: grid;
+  gap: 8px;
 }
