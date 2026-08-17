@@ -147,7 +147,7 @@ function themeCardSubtitle(theme) {
     matcha: "Green low-light",
     graphite: "Quiet slate",
     ember: "Warm contrast",
-    paper: "Warm light mode",
+    paper: "Warm cream stationery",
   };
   return subtitles[theme] || "Dashboard theme";
 }
@@ -333,10 +333,18 @@ function setMeter(fillId, textId, value) {
   $(textId).textContent = normalized == null ? "--" : `${Math.round(normalized)}%`;
 }
 
+function clearSkeletons() {
+  for (const id of ["historySkeleton", "recentSkeleton", "activitySkeleton"]) {
+    const el = $(id);
+    if (el) el.remove();
+  }
+}
+
 function renderHistory() {
   const history = state.history;
   const panel = $("historyPanel");
   if (!panel || !history) return;
+  clearSkeletons();
 
   const hasTurns = (history.turns || 0) > 0;
   panel.classList.toggle("history-empty", !hasTurns);

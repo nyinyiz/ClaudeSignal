@@ -101,6 +101,10 @@
       </section>
 
       <section id="activityPanel" class="activity-card" aria-label="Claude activity over time">
+        <div id="activitySkeleton" class="activity-skeleton">
+          <div class="skeleton-heading skeleton"></div>
+          <div class="skeleton-chart skeleton"></div>
+        </div>
         <div class="activity-header">
           <div>
             <span class="usage-label">System activity</span>
@@ -126,8 +130,8 @@
                 <stop offset="100%" stop-color="var(--primary-2)" stop-opacity="0"></stop>
               </linearGradient>
               <linearGradient id="requestsAreaGradient" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#b96618" stop-opacity="0.24"></stop>
-                <stop offset="100%" stop-color="#b96618" stop-opacity="0"></stop>
+                <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.24"></stop>
+                <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"></stop>
               </linearGradient>
             </defs>
             <g class="activity-grid-lines">
@@ -146,6 +150,40 @@
 
       <section class="usage-dashboard" aria-label="Claude usage dashboard">
         <section id="historyPanel" class="history-card history-empty" aria-label="Claude usage history">
+          <div id="historySkeleton" class="history-skeleton">
+            <div class="skeleton-heading skeleton"></div>
+            <div class="skeleton-summary">
+              <article>
+                <div class="skeleton-text-sm skeleton"></div>
+                <div class="skeleton-stat skeleton"></div>
+                <div class="skeleton-text-sm skeleton"></div>
+              </article>
+              <article>
+                <div class="skeleton-text-sm skeleton"></div>
+                <div class="skeleton-stat skeleton"></div>
+                <div class="skeleton-text-sm skeleton"></div>
+              </article>
+              <article>
+                <div class="skeleton-text-sm skeleton"></div>
+                <div class="skeleton-stat skeleton"></div>
+                <div class="skeleton-text-sm skeleton"></div>
+              </article>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div>
+                <div class="skeleton-text-sm skeleton" style="width:40%;margin-bottom:10px"></div>
+                <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:80%"></div></div>
+                <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:65%"></div></div>
+                <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:50%"></div></div>
+              </div>
+              <div>
+                <div class="skeleton-text-sm skeleton" style="width:40%;margin-bottom:10px"></div>
+                <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:75%"></div></div>
+                <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:60%"></div></div>
+                <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:45%"></div></div>
+              </div>
+            </div>
+          </div>
           <div class="usage-header">
             <div>
               <span class="usage-label">History</span>
@@ -199,6 +237,16 @@
         </section>
 
         <aside class="recent-card" aria-label="Recent sessions">
+          <div id="recentSkeleton" class="recent-skeleton">
+            <div class="skeleton-heading skeleton"></div>
+            <div class="skeleton-rows">
+              <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:85%"></div></div>
+              <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:70%"></div></div>
+              <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:90%"></div></div>
+              <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:55%"></div></div>
+              <div class="skeleton-row"><div class="skeleton-dot skeleton"></div><div class="skeleton-bar skeleton" style="width:75%"></div></div>
+            </div>
+          </div>
           <div class="recent-header">
             <span>Recent activity</span>
             <h3>Session timeline</h3>
