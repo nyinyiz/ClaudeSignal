@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="ClaudeSignal — AI engineering health dashboard." />
+    <title>Health — ClaudeSignal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Manrope:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/health-styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="/" class="back-link" aria-label="Back to dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7"></path>
+            </svg>
+          </a>
+          <div>
+            <p class="eyebrow">Claude Code</p>
+            <h1>AI Engineering Health</h1>
+          </div>
+        </div>
+        <nav class="top-actions" aria-label="Page controls">
+          <button id="refreshBtn" class="icon-button" type="button" aria-label="Refresh data">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+            </svg>
+          </button>
+        </nav>
+      </header>
+
+      <div id="loadingState" class="health-page-loading">
+        <div class="shimmer-grid">
+          <div class="shimmer-block shimmer-block--hero"></div>
+          <div class="shimmer-block shimmer-block--hero"></div>
+          <div class="shimmer-block shimmer-block--chart"></div>
+          <div class="shimmer-block shimmer-block--side"></div>
+          <div class="shimmer-block shimmer-block--side"></div>
+        </div>
+        <p class="shimmer-text">Loading health data…</p>
+      </div>
+
+      <div id="pageContent" class="health-page-content" hidden>
+
+        <!-- Hero metric strip -->
+        <section class="metric-strip reveal" aria-label="Key metrics">
+          <div class="metric-tile metric-tile--green">
+            <div class="metric-tile-header">
+              <span>First-Pass Success</span>
+            </div>
+            <strong id="metricFirstPass">--</strong>
+            <p>of tasks pass verification first try</p>
+          </div>
+          <div class="metric-tile metric-tile--blue">
+            <div class="metric-tile-header">
+              <span>Avg Repair Attempts</span>
+            </div>
+            <strong id="metricRepairs">--</strong>
+            <p>per task before passing</p>
+          </div>
+          <div class="metric-tile metric-tile--purple">
+            <div class="metric-tile-header">
+              <span>PR Merge Rate</span>
+            </div>
+            <strong id="metricMergeRate">--</strong>
+            <p>of PRs merged successfully</p>
+          </div>
+          <div class="metric-tile metric-tile--orange">
+            <div class="metric-tile-header">
+              <span>Human Intervention</span>
+            </div>
+            <strong id="metricHuman">--</strong>
+            <p>of tasks required human help</p>
+          </div>
+        </section>
+
+        <!-- Usage & Cost -->
+        <section class="panel panel--accent panel--accent-blue reveal" aria-label="Usage and cost">
+          <div class="panel-head">
+            <h2>Usage & Cost</h2>
+            <span class="panel-sub">AI resource consumption</span>
+          </div>
+          <div class="health-stats-grid">
+            <div class="health-stat">
+              <span class="health-stat-label">Total Tokens</span>
+              <strong id="statTotalTokens">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Input Tokens</span>
+              <strong id="statInputTokens">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Output Tokens</span>
+              <strong id="statOutputTokens">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Cache Tokens</span>
+              <strong id="statCacheTokens">--</strong>
+            </div>
+            <div class="health-stat health-stat--featured">
+              <span class="health-stat-label">Estimated Cost</span>
+              <strong id="statCost">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Models Used</span>
+              <strong id="statModels">--</strong>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quality & Reliability -->
+        <div class="health-two-col">
+          <section class="panel panel--accent panel--accent-green reveal" aria-label="Quality metrics">
+            <div class="panel-head">
+              <h2>Quality</h2>
+              <span class="panel-sub">Code quality signals</span>
+            </div>
+            <div class="health-gauge-grid">
+              <div class="health-gauge">
+                <div class="health-gauge-ring" id="gaugeFirstPass">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="gauge-fill gauge-fill--green" id="gaugeFirstPassFill"></circle>
+                  </svg>
+                  <span class="gauge-value" id="gaugeFirstPassVal">--</span>
+                </div>
+                <span class="gauge-label">First-Pass</span>
+              </div>
+              <div class="health-gauge">
+                <div class="health-gauge-ring" id="gaugeZeroRepair">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="gauge-fill gauge-fill--blue" id="gaugeZeroRepairFill"></circle>
+                  </svg>
+                  <span class="gauge-value" id="gaugeZeroRepairVal">--</span>
+                </div>
+                <span class="gauge-label">Zero Repair</span>
+              </div>
+              <div class="health-gauge">
+                <div class="health-gauge-ring" id="gaugeLowFindings">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="gauge-fill gauge-fill--purple" id="gaugeLowFindingsFill"></circle>
+                  </svg>
+                  <span class="gauge-value" id="gaugeLowFindingsVal">--</span>
+                </div>
+                <span class="gauge-label">Low Findings</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel--accent panel--accent-warm reveal" aria-label="Reliability metrics">
+            <div class="panel-head">
+              <h2>Reliability</h2>
+              <span class="panel-sub">Delivery success</span>
+            </div>
+            <div class="health-gauge-grid">
+              <div class="health-gauge">
+                <div class="health-gauge-ring" id="gaugeMergeRate">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="gauge-fill gauge-fill--orange" id="gaugeMergeRateFill"></circle>
+                  </svg>
+                  <span class="gauge-value" id="gaugeMergeRateVal">--</span>
+                </div>
+                <span class="gauge-label">Merge Rate</span>
+              </div>
+              <div class="health-gauge">
+                <div class="health-gauge-ring" id="gaugeNoIntervention">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="gauge-fill gauge-fill--green" id="gaugeNoInterventionFill"></circle>
+                  </svg>
+                  <span class="gauge-value" id="gaugeNoInterventionVal">--</span>
+                </div>
+                <span class="gauge-label">No Intervention</span>
+              </div>
+              <div class="health-gauge">
+                <div class="health-gauge-ring" id="gaugeAllTestsPass">
+                  <svg viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                    <circle cx="50" cy="50" r="42" class="gauge-fill gauge-fill--blue" id="gaugeAllTestsPassFill"></circle>
+                  </svg>
+                  <span class="gauge-value" id="gaugeAllTestsPassVal">--</span>
+                </div>
+                <span class="gauge-label">All Tests Pass</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Risk Distribution -->
+        <section class="panel panel--accent panel--accent-pink reveal" aria-label="Risk distribution">
+          <div class="panel-head">
+            <h2>Risk Distribution</h2>
+            <span class="panel-sub">Task risk levels</span>
+          </div>
+          <div id="riskDistribution" class="health-bar-chart"></div>
+        </section>
+
+        <!-- Productivity -->
+        <section class="panel panel--accent panel--accent-purple reveal" aria-label="Productivity metrics">
+          <div class="panel-head">
+            <h2>Productivity</h2>
+            <span class="panel-sub">Output efficiency</span>
+          </div>
+          <div class="health-stats-grid">
+            <div class="health-stat">
+              <span class="health-stat-label">Tasks Completed</span>
+              <strong id="statTasksCompleted">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Total Duration</span>
+              <strong id="statTotalDuration">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Avg Duration</span>
+              <strong id="statAvgDuration">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">Commits</span>
+              <strong id="statCommits">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">PRs Created</span>
+              <strong id="statPRsCreated">--</strong>
+            </div>
+            <div class="health-stat">
+              <span class="health-stat-label">PRs Merged</span>
+              <strong id="statPRsMerged">--</strong>
+            </div>
+          </div>
+        </section>
+
+        <!-- Review Findings -->
+        <section class="panel panel--accent panel--accent-neutral reveal" aria-label="Review findings">
+          <div class="panel-head">
+            <h2>Review Findings</h2>
+            <span class="panel-sub">Issues caught in review</span>
+          </div>
+          <div class="health-findings-grid">
+            <div class="health-finding health-finding--high">
+              <strong id="findingsHigh">0</strong>
+              <span>High</span>
+            </div>
+            <div class="health-finding health-finding--medium">
+              <strong id="findingsMedium">0</strong>
+              <span>Medium</span>
+            </div>
+            <div class="health-finding health-finding--low">
+              <strong id="findingsLow">0</strong>
+              <span>Low</span>
+            </div>
+            <div class="health-finding health-finding--total">
+              <strong id="findingsTotal">0</strong>
+              <span>Total</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <strong>ClaudeSignal</strong>
+        <span>AI Engineering Health</span>
+      </div>
+      <p><a href="/">Back to dashboard</a></p>
+    </footer>
+
+    <script src="/themes.js"></script>
+    <script src="/health.js"></script>
+  </body>
+</html>
