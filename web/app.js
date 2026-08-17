@@ -247,6 +247,8 @@ function connect() {
     } else if (message.type === "usage") {
       state.usage = message.data;
       renderUsage();
+    } else if (message.type === "alert") {
+      showAlertToast(message.data);
     }
   });
 
@@ -266,6 +268,22 @@ function setConnection(connected) {
   $("connection").classList.toggle("connected", connected);
   $("connection").classList.toggle("disconnected", !connected);
   $("connectionText").textContent = connected ? "Online" : "Offline";
+}
+
+function showAlertToast(alert) {
+  if (!alert || !alert.kind || !alert.title || !alert.message) return;
+  let container = $("#toastContainer");
+  if (!container) return;
+
+  const toast = document.createElement("div");
+  toast.className = `alert-toast alert-toast--${alert.kind}`;
+  toast.innerHTML = `<strong>${escapeHtml(alert.title)}</strong><span>${escapeHtml(alert.message)}</span>`;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("alert-toast--visible"));
+  setTimeout(() => {
+    toast.classList.remove("alert-toast--visible");
+    setTimeout(() => toast.remove(), 300);
+  }, 6000);
 }
 
 function renderUsage() {

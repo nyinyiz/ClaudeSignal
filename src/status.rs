@@ -82,5 +82,6 @@ pub enum ServerEvent {
     Status(StatusSnapshot),
     Log(LogEntry),
     Usage(UsageSnapshot),
+    Alert(crate::alerts::Alert),
     Heartbeat { timestamp: DateTime<Utc> },
 }

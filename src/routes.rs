@@ -25,6 +25,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/logs", get(logs))
         .route("/api/usage", get(usage).post(update_usage))
         .route("/api/usage/history", get(usage_history))
+        .route("/api/config", get(config))
         .route("/ws", get(ws_handler))
         .with_state(state)
 }
@@ -105,4 +106,8 @@ async fn usage_history() -> Json<usage_history::UsageHistorySnapshot> {
         .await
         .expect("usage history scan panicked");
     Json(snapshot)
+}
+
+async fn config(State(state): State<AppState>) -> Json<crate::config::Config> {
+    Json(state.config.as_ref().clone())
 }
