@@ -1,6 +1,6 @@
 # ClaudeSignal — Agent Workflow
 
-> **Version:** 3.0  
+> **Version:** 4.0  
 > **Status:** Active  
 > **Last updated:** 2026-08-17
 
@@ -488,6 +488,86 @@ review:
 
 ---
 
+## Agent Observability
+
+Every task produces metrics. These metrics answer: **Is AI actually improving engineering productivity?**
+
+### Metrics to Track
+
+| Metric | How | Why |
+|--------|-----|-----|
+| **Task duration** | Timestamp at start → commit | How long does a task take? |
+| **Tokens used** | Sum input + output tokens from session | Cost of the task |
+| **Estimated cost** | Tokens × model pricing | Dollar cost of AI assistance |
+| **Repair attempts** | Count in verification history | Code quality signal |
+| **Human intervention** | Was STOP triggered? | Agent reliability |
+| **Review findings** | Count by severity (high/medium/low) | Code review quality |
+| **First-pass success** | Did verification pass on first try? | Agent competence |
+| **PR outcome** | Merged / changes requested / closed | Delivery success |
+
+### Task Metrics Artifact
+
+Add to the task plan:
+
+```yaml
+task:
+  id: daily-cost-reset
+  start_time: "2026-08-17T14:00:00Z"
+  model: opencode/big-pickle
+```
+
+Add to the verification report:
+
+```yaml
+metrics:
+  duration_minutes: 12
+  repair_attempts: 0
+  first_pass_success: true
+  human_intervention: false
+  tokens:
+    input: 15000
+    output: 8000
+  estimated_cost_usd: 0.04
+```
+
+Add to the review report:
+
+```yaml
+metrics:
+  review_findings:
+    high: 0
+    medium: 1
+    low: 2
+  pr_outcome: merged
+```
+
+### Aggregated Metrics (per session)
+
+After multiple tasks, aggregate:
+
+```yaml
+session_summary:
+  tasks_completed: 5
+  total_duration_minutes: 45
+  total_tokens: 120000
+  total_estimated_cost_usd: 0.32
+  first_pass_success_rate: "80%"
+  avg_repair_attempts: 0.4
+  human_intervention_rate: "20%"
+  pr_merge_rate: "100%"
+```
+
+This data answers the review's key questions:
+```
+How much AI are we using?        → tokens + cost
+How successful are the tasks?    → first-pass success + PR outcomes
+How many repairs are required?   → repair attempts
+How often does human intervene?  → human intervention rate
+How many defects are caught?     → review findings
+```
+
+---
+
 ## Commands
 
 ```bash
@@ -518,5 +598,6 @@ This workflow is versioned and improves over time.
 | 1.0 | 2026-08-16 | Initial workflow: plan → implement → verify → review → ship |
 | 2.0 | 2026-08-17 | Added: acceptance criteria, failure/recovery, risk levels, architecture review, regression analysis, parallel reviews, workflow artifacts |
 | 3.0 | 2026-08-17 | Added: test strategy selection, rollback/recovery strategy, project-specific architecture review, practical example workflow |
+| 4.0 | 2026-08-17 | Added: agent observability — task metrics, token/cost tracking, first-pass success, PR outcomes, aggregated session summary |
 
 Full review: `localDocs/AGENT-WORKFLOW-REVIEW.md`
