@@ -190,3 +190,46 @@ fn handles_blank_lines() {
 
     assert_eq!(snapshot.turns, 1);
 }
+
+// === Fixture-based integration tests ===
+
+fn fixture_path(name: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
+}
+
+fn snapshot_for_fixture(name: &str) -> usage_history::UsageHistorySnapshot {
+    let path = fixture_path(name);
+    let turns = usage_history::parse_jsonl_files(&[path]);
+    usage_history::build_snapshot(1, turns, &[])
+}
+
+#[test]
+fn fixture_basic_session_parses_correctly() {
+    let snapshot = snapshot_for_fixture("basic-session.jsonl");
+
+    assert_eq!(snapshot.turns, 3);
+    assert_eq!(snapshot.all_time.input_tokens, 5500);
+    assert_eq!(snapshot.all_time.output_tokens, 1600);
+    assert_eq!(snapshot.transcript_files, 1);
+}
+
+#[test]
+fn fixture_multi_model_tracks_all_models() {
+    let snapshot = snapshot_for_fixture("multi-model.jsonl");
+
+    assert_eq!(snapshot.turns, 4);
+    assert!(snapshot.all_time.input_tokens > 0);
+    assert_eq!(snapshot.transcript_files, 1);
+}
+
+#[test]
+fn fixture_cache_tokens_are_aggregated() {
+    let snapshot = snapshot_for_fixture("cache-tokens.jsonl");
+
+    assert_eq!(snapshot.turns, 3);
+    assert_eq!(snapshot.all_time.cache_read_tokens, 5700);
+    assert_eq!(snapshot.all_time.cache_creation_tokens, 1500);
+    assert!(snapshot.all_time.input_tokens > 0);
+}

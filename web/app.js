@@ -27,7 +27,7 @@ const THEME_KEY = "claude-signal-theme";
 const TZ_KEY = "claude-signal-timezones";
 const MAX_TIMEZONES = 6;
 const USAGE_REFRESH_INTERVAL_MS = 10000;
-const THEMES = new Set(["cozy", "matcha", "graphite", "ember", "paper"]);
+// THEMES is defined in themes.js (shared across pages)
 const MOOD_THRESHOLDS = [
   { minTokens: 45_000_000, name: "overload", pressure: "critical" },
   { minTokens: 25_000_000, name: "tired", pressure: "high" },

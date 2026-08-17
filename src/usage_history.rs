@@ -2,6 +2,8 @@ use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     fs,
     path::{Path, PathBuf},
+    sync::Mutex,
+    time::SystemTime,
 };
 
 use chrono::{DateTime, Datelike, Local, NaiveDate, Utc};
@@ -9,6 +11,50 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::db;
+
+/// Per-file cache entry: (mtime, parsed turns).
+type FileCacheEntry = (SystemTime, Vec<TurnUsage>);
+
+/// Incremental scan cache — stores per-file parse results keyed by path + mtime.
+/// Only files whose mtime has changed since the last scan are re-parsed.
+struct ScanCache {
+    files: HashMap<PathBuf, FileCacheEntry>,
+}
+
+impl ScanCache {
+    fn new() -> Self {
+        Self {
+            files: HashMap::new(),
+        }
+    }
+
+    /// Return cached turns for a file if its mtime matches.
+    fn get(&self, path: &Path, mtime: SystemTime) -> Option<&Vec<TurnUsage>> {
+        self.files.get(path).and_then(|(cached_mtime, turns)| {
+            if *cached_mtime == mtime {
+                Some(turns)
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Store parsed turns for a file.
+    fn insert(&mut self, path: PathBuf, mtime: SystemTime, turns: Vec<TurnUsage>) {
+        self.files.insert(path, (mtime, turns));
+    }
+
+    /// Remove entries for files that no longer exist.
+    fn prune(&mut self, existing: &std::collections::HashSet<PathBuf>) {
+        self.files.retain(|path, _| existing.contains(path));
+    }
+}
+
+static SCAN_CACHE: std::sync::OnceLock<Mutex<ScanCache>> = std::sync::OnceLock::new();
+
+fn scan_cache() -> &'static Mutex<ScanCache> {
+    SCAN_CACHE.get_or_init(|| Mutex::new(ScanCache::new()))
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -115,14 +161,88 @@ pub fn scan_default() -> UsageHistorySnapshot {
         collect_jsonl_files(&dir, &mut transcript_files);
     }
     transcript_files.sort();
-    scan_paths(&transcript_files)
+
+    let known: std::collections::HashSet<PathBuf> = transcript_files.iter().cloned().collect();
+    let mut cache = scan_cache().lock().unwrap();
+    cache.prune(&known);
+
+    let mut turns = Vec::new();
+    for path in &transcript_files {
+        let mtime = fs::metadata(path)
+            .and_then(|m| m.modified())
+            .unwrap_or(SystemTime::UNIX_EPOCH);
+
+        if let Some(cached) = cache.get(path, mtime) {
+            turns.extend(cached.iter().cloned());
+        } else {
+            let parsed = parse_jsonl_file(path);
+            turns.extend(parsed.iter().cloned());
+            cache.insert(path.clone(), mtime, parsed);
+        }
+    }
+    drop(cache);
+
+    // Find the earliest date in current JSONL data
+    let today = Local::now().date_naive();
+    let earliest_jsonl_date = turns
+        .iter()
+        .filter_map(|t| t.timestamp)
+        .map(|ts| ts.with_timezone(&Local).date_naive())
+        .min();
+
+    // Persist completed days to DB and load historical data
+    let db_historical = match db::open_db() {
+        Ok(conn) => {
+            // Store completed days from JSONL to DB (not today — still accumulating)
+            let daily_rows = aggregate_turns_by_day(&turns, today);
+            if !daily_rows.is_empty() {
+                if let Err(e) = db::store_daily_aggregates(&conn, &daily_rows) {
+                    tracing::warn!("Failed to store daily aggregates: {}", e);
+                }
+            }
+
+            // Load historical data from DB for dates before JSONL coverage
+            if let Some(earliest) = earliest_jsonl_date {
+                match db::load_daily_aggregates(&conn, Some(earliest)) {
+                    Ok(rows) => rows,
+                    Err(e) => {
+                        tracing::warn!("Failed to load historical data: {}", e);
+                        Vec::new()
+                    }
+                }
+            } else {
+                Vec::new()
+            }
+        }
+        Err(e) => {
+            tracing::warn!("Failed to open usage DB: {}", e);
+            Vec::new()
+        }
+    };
+
+    build_snapshot(transcript_files.len(), turns, &db_historical)
 }
 
 pub fn scan_paths(transcript_files: &[PathBuf]) -> UsageHistorySnapshot {
+    let known: std::collections::HashSet<PathBuf> = transcript_files.iter().cloned().collect();
+    let mut cache = scan_cache().lock().unwrap();
+    cache.prune(&known);
+
     let mut turns = Vec::new();
-    for file in transcript_files {
-        turns.extend(parse_jsonl_file(file));
+    for path in transcript_files {
+        let mtime = fs::metadata(path)
+            .and_then(|m| m.modified())
+            .unwrap_or(SystemTime::UNIX_EPOCH);
+
+        if let Some(cached) = cache.get(path, mtime) {
+            turns.extend(cached.iter().cloned());
+        } else {
+            let parsed = parse_jsonl_file(path);
+            turns.extend(parsed.iter().cloned());
+            cache.insert(path.clone(), mtime, parsed);
+        }
     }
+    drop(cache);
 
     // Find the earliest date in current JSONL data
     let today = Local::now().date_naive();
