@@ -2,7 +2,7 @@
 
 A local-first Claude Code usage dashboard for macOS. Single Rust binary, no database, no telemetry — usage data stays on your machine.
 
-![ClaudeSignal dashboard](docs/screenshots/dashboard.jpg)
+![ClaudeSignal dashboard](docs/screenshots/dashboard-new.png)
 
 ## Features
 
@@ -11,10 +11,13 @@ A local-first Claude Code usage dashboard for macOS. Single Rust binary, no data
 - **Activity chart** — tokens or cost view with 7-day, 4-week, and 6-month ranges
 - **Recent sessions** — sortable table with project, model, tokens, turns, cost, and time
 - **Usage analytics page** — detailed breakdowns with daily/weekly comparisons, token type breakdown, cost by model, cost optimization tips, and two-column panel layout
+- **AI Engineering Health Dashboard** — quality, reliability, cost, and productivity metrics
+
+![Usage analytics](docs/screenshots/usage-new.png)
 - **Animated cat** — mood reacts to your daily token usage (sleeping → calm → curious → focus → busy → tired → overload)
 - **Cat speech bubbles** — idle commentary and milestone alerts
 - **World clock** — Thailand, UK, Hong Kong, Canada
-- **Themes** — Cozy Warm, Matcha Calm, Graphite Focus, Ember Night
+- **Themes** — Paper Light, Cozy Warm, Matcha Calm, Graphite Focus, Ember Night
 
 ## How It Works
 
