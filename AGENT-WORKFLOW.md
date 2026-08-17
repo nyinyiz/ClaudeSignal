@@ -1,6 +1,6 @@
 # ClaudeSignal — Agent Workflow
 
-> **Version:** 2.0  
+> **Version:** 3.0  
 > **Status:** Active  
 > **Last updated:** 2026-08-17
 
@@ -182,11 +182,25 @@ After verification passes, run parallel reviews:
 - No outbound network calls
 
 ### Architecture Review (for medium/large changes)
-- Preserves module boundaries
-- No unnecessary coupling
-- No business logic duplication
-- Abstraction is appropriate
-- Consistent with existing architecture
+
+**General questions:**
+- Does this preserve module boundaries?
+- Does this introduce unnecessary coupling?
+- Is business logic duplicated?
+- Does this introduce unnecessary dependencies?
+- Does this create future migration problems?
+- Is the abstraction appropriate?
+- Is the implementation consistent with existing architecture?
+
+**ClaudeSignal-specific questions:**
+- Does this change touch `routes.rs`? → Consider if it should be a new module
+- Does this add a new `ServerEvent` variant? → Check `ServerEvent` enum in `websocket.rs` and frontend handler in `app.js`
+- Does this modify `AppState`? → Check all consumers of `AppState`
+- Does this add a new API endpoint? → Must be in `build_router()` in `routes.rs`, documented in `API.md`, tested in `tests/server_routes.rs`
+- Does this change `Config` structs? → Check `config.rs`, `Config::load()`, and all config consumers
+- Does this modify `usage_history.rs`? → Check `tests/usage_history_parsing.rs` for existing test patterns
+- Does this change frontend files? → Remember `include_str!` embedding; requires `cargo build` + server restart
+- Does this touch `ScanCache`? → Check mtime-based invalidation logic
 
 ### Requirements Check
 - Every acceptance criterion is met
@@ -215,6 +229,100 @@ regression_surface:
 ```
 
 Then ensure tests cover the affected areas.
+
+---
+
+## Test Strategy Selection
+
+Choose a test strategy before implementing. The strategy depends on change type and risk.
+
+| Change Type | Strategy | Why |
+|-------------|----------|-----|
+| New feature | **TDD** | Write tests first to define behavior |
+| Bug fix | **Characterization** | Write test that reproduces bug, then fix |
+| Refactor (no behavior change) | **Test-after** | Existing tests validate; add edge cases after |
+| Config change | **Integration** | Test config → behavior end-to-end |
+| UI tweak | **Visual / manual** | Automated tests fragile; verify visually |
+| API addition | **TDD + Integration** | Test contract and integration with callers |
+
+### Strategy Decision Flowchart
+
+```
+Is behavior changing?
+├── YES → Is it a new feature?
+│         ├── YES → TDD
+│         └── NO (bug fix) → Characterization test first
+└── NO (refactor/style)
+    ├── Existing tests pass? → Test-after (add edge cases)
+    └── No existing tests → Write tests first for critical paths
+```
+
+### Strategy in Task Plan
+
+```yaml
+task:
+  id: add-efficiency-metrics
+  test_strategy: tdd
+  test_plan:
+    - write unit test for efficiency calculation
+    - write integration test for /api/efficiency endpoint
+    - verify frontend renders metrics
+```
+
+---
+
+## Rollback & Recovery
+
+When verification fails after 3 repair attempts:
+
+```
+REPAIR 1 → VERIFY → FAIL
+REPAIR 2 → VERIFY → FAIL
+REPAIR 3 → VERIFY → FAIL
+    ↓
+STOP — Do not attempt repair 4
+    ↓
+┌─────────────────────────────┐
+│ RECOVERY STRATEGY           │
+├─────────────────────────────┤
+│ 1. Revert unsafe changes    │
+│ 2. Generate failure report  │
+│ 3. Request human help       │
+└─────────────────────────────┘
+```
+
+### Recovery Options
+
+| Scenario | Action |
+|----------|--------|
+| All tests fail after 3 repairs | `git stash` changes, report to human |
+| Build broken after 3 repairs | Revert to last passing commit |
+| Partial success (some tests pass) | Keep passing changes, revert failing ones |
+| Security issue found | Stop immediately, revert, flag as HIGH risk |
+
+### Failure Report Format
+
+```yaml
+task: <task-id>
+status: STOPPED
+repair_attempts: 3
+verification_history:
+  - attempt: 1
+    build: pass
+    tests: FAIL (3 failures)
+  - attempt: 2
+    build: pass
+    tests: FAIL (1 failure)
+  - attempt: 3
+    build: pass
+    tests: FAIL (1 failure)
+remaining_issues:
+  - test: test_name
+    error: "description"
+    file: src/file.rs:42
+recovery_action: git stash
+next_step: human_intervention
+```
 
 ---
 
@@ -277,6 +385,109 @@ findings:
 
 ---
 
+## Example Workflow
+
+A real task following this workflow end-to-end.
+
+### User Request
+
+> "Add daily cost reset at midnight"
+
+### Step 1 — Understand
+
+```
+Goal: Daily cost counter resets at midnight UTC
+Scope: alerts.rs, config.rs, routes.rs
+Constraints: Must not break existing alert logic
+```
+
+### Step 2 — Plan + Acceptance Criteria
+
+```yaml
+task:
+  id: daily-cost-reset
+  title: Reset daily cost counter at midnight
+  risk: medium
+  acceptance_criteria:
+    - daily_cost resets to 0 at midnight UTC
+    - alert_manager resets threshold state
+    - existing alerts continue working
+    - no duplicate alerts after reset
+  affected_areas:
+    - src/alerts.rs
+    - src/config.rs
+  regression_surface:
+    - AlertManager state
+    - daily cost calculation
+    - /api/usage endpoint
+  test_strategy: tdd
+```
+
+### Step 3 — Implement (TDD)
+
+1. Write test: `test_daily_cost_resets_at_midnight`
+2. Run test → FAIL (RED)
+3. Implement reset logic
+4. Run test → PASS (GREEN)
+5. Refactor if needed
+
+### Step 4 — Verify
+
+```bash
+cargo build && cargo test && cargo clippy
+```
+
+Result: all pass.
+
+### Step 5 — Reviews
+
+Run in parallel:
+- Code review: readability, error handling
+- Security review: no new attack surface
+- Architecture review: does reset logic belong in AlertManager?
+- Requirements check: all 4 acceptance criteria met
+
+### Step 6 — Commit + PR
+
+```bash
+git checkout -b agent/daily-cost-reset
+git commit -m "feat: add daily cost reset at midnight"
+git push --set-upstream origin agent/daily-cost-reset
+gh pr create ...
+```
+
+### Artifacts Produced
+
+```yaml
+task:
+  id: daily-cost-reset
+  risk: medium
+  acceptance_criteria: [4 items]
+
+verification:
+  build: pass
+  tests: pass
+  clippy: pass
+  acceptance:
+    passed: true
+    criteria_met: [4/4]
+  repair_attempts: 0
+  regression:
+    passed: true
+
+review:
+  code: pass
+  security: pass
+  architecture: pass
+  requirements: pass
+  findings:
+    high: 0
+    medium: 0
+    low: 1
+```
+
+---
+
 ## Commands
 
 ```bash
@@ -306,5 +517,6 @@ This workflow is versioned and improves over time.
 |---------|------|---------|
 | 1.0 | 2026-08-16 | Initial workflow: plan → implement → verify → review → ship |
 | 2.0 | 2026-08-17 | Added: acceptance criteria, failure/recovery, risk levels, architecture review, regression analysis, parallel reviews, workflow artifacts |
+| 3.0 | 2026-08-17 | Added: test strategy selection, rollback/recovery strategy, project-specific architecture review, practical example workflow |
 
 Full review: `localDocs/AGENT-WORKFLOW-REVIEW.md`
