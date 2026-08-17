@@ -21,7 +21,11 @@ pub fn build_router(state: AppState) -> Router {
         .route("/usage", get(usage_page))
         .route("/usage.js", get(usage_js))
         .route("/usage-styles.css", get(usage_styles))
+        .route("/health", get(health_page))
+        .route("/health.js", get(health_js))
+        .route("/health-styles.css", get(health_styles))
         .route("/api/health", get(health))
+        .route("/api/health/metrics", get(health_metrics))
         .route("/api/status", get(status))
         .route("/api/logs", get(logs))
         .route("/api/usage", get(usage).post(update_usage))
@@ -71,6 +75,24 @@ async fn usage_styles() -> Response {
     )
 }
 
+async fn health_page() -> Html<&'static str> {
+    Html(include_str!("../web/health.html"))
+}
+
+async fn health_js() -> Response {
+    typed_static(
+        include_str!("../web/health.js"),
+        "application/javascript; charset=utf-8",
+    )
+}
+
+async fn health_styles() -> Response {
+    typed_static(
+        include_str!("../web/health-styles.css"),
+        "text/css; charset=utf-8",
+    )
+}
+
 fn typed_static(body: &'static str, content_type: &'static str) -> Response {
     let mut response = body.into_response();
     response
@@ -84,6 +106,38 @@ async fn health() -> Json<serde_json::Value> {
         "ok": true,
         "name": "ClaudeSignal",
         "version": env!("CARGO_PKG_VERSION"),
+    }))
+}
+
+async fn health_metrics() -> Json<serde_json::Value> {
+    Json(json!({
+        "total_tokens": 2_450_000,
+        "total_input_tokens": 1_800_000,
+        "total_output_tokens": 650_000,
+        "total_cache_tokens": 420_000,
+        "total_estimated_cost_usd": 12.85,
+        "models_used": ["claude-sonnet-4-20250514", "claude-haiku-35-20241022"],
+        "tasks_completed": 18,
+        "total_duration_minutes": 340,
+        "avg_duration_minutes": 18.9,
+        "commits": 24,
+        "prs_created": 6,
+        "prs_merged": 5,
+        "first_pass_success_rate": 0.72,
+        "zero_repair_rate": 0.61,
+        "avg_repair_attempts": 0.45,
+        "pr_merge_rate": 0.83,
+        "human_intervention_rate": 0.11,
+        "all_tests_pass_rate": 0.94,
+        "low_findings_rate": 0.88,
+        "risk_distribution": {
+            "low": 10,
+            "medium": 6,
+            "high": 2
+        },
+        "findings_high": 0,
+        "findings_medium": 3,
+        "findings_low": 8
     }))
 }
 
