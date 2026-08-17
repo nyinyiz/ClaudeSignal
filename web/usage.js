@@ -883,6 +883,10 @@ function renderSessionTable(sessions) {
         aVal = a.totals?.turns || 0;
         bVal = b.totals?.turns || 0;
         break;
+      case "cache":
+        aVal = cacheHitRate(a);
+        bVal = cacheHitRate(b);
+        break;
       case "cost":
         aVal = a.totals?.estimatedCostUsd || 0;
         bVal = b.totals?.estimatedCostUsd || 0;
@@ -910,6 +914,7 @@ function renderSessionTable(sessions) {
         <td><span class="session-model">${esc(s.model || "unknown")}</span></td>
         <td>${fmtNum(tokTotal(t))}</td>
         <td>${fmtNum(t.turns)}</td>
+        <td class="session-cache">${cacheHitRateText(s)}</td>
         <td class="session-cost ${costClass}">${fmtCost(cost)}</td>
         <td class="session-time">${relativeTime(s.lastActivityAt)}</td>
       </tr>`;
@@ -933,6 +938,21 @@ function summaryMetaHtml(current, previous) {
 function tokTotal(t) {
   if (!t) return 0;
   return (t.inputTokens || 0) + (t.outputTokens || 0) + (t.cacheReadTokens || 0) + (t.cacheCreationTokens || 0);
+}
+
+function cacheHitRate(session) {
+  const read = session?.totals?.cacheReadTokens || 0;
+  const created = session?.totals?.cacheCreationTokens || 0;
+  const total = read + created;
+  return total === 0 ? null : read / total;
+}
+
+function cacheHitRateText(session) {
+  const rate = cacheHitRate(session);
+  if (rate === null) return '<span class="cache-none">--</span>';
+  const pct = Math.round(rate * 100);
+  const cls = rate >= 0.7 ? "cache-high" : rate >= 0.4 ? "cache-mid" : "cache-low";
+  return `<span class="cache-badge ${cls}">${pct}%</span>`;
 }
 
 function fmtTokens(t) {

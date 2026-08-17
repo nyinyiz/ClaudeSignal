@@ -21,6 +21,19 @@ pub struct UsageTotals {
     pub estimated_cost_usd: f64,
 }
 
+impl UsageTotals {
+    /// Fraction of cache traffic served from reads (0.0-1.0).
+    /// None when there was no cache traffic at all.
+    pub fn cache_hit_rate(&self) -> Option<f64> {
+        let total = self.cache_read_tokens + self.cache_creation_tokens;
+        if total == 0 {
+            None
+        } else {
+            Some(self.cache_read_tokens as f64 / total as f64)
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelUsage {
@@ -43,6 +56,8 @@ pub struct RecentSession {
     pub model: String,
     pub last_activity_at: Option<String>,
     pub totals: UsageTotals,
+    /// Fraction (0.0-1.0) of cached reads relative to total cache traffic.
+    pub cache_hit_rate: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -454,6 +469,7 @@ fn build_snapshot(transcript_files: usize, turns: Vec<TurnUsage>, db_historical:
             last_activity_at: session
                 .last_activity_at
                 .map(|timestamp| timestamp.to_rfc3339()),
+            cache_hit_rate: session.totals.cache_hit_rate(),
             totals: session.totals,
         })
         .collect::<Vec<_>>();
@@ -633,4 +649,32 @@ fn most_common_model(counts: HashMap<String, u64>) -> String {
         .max_by_key(|(_, count)| *count)
         .map(|(model, _)| model)
         .unwrap_or_else(|| "unknown".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::UsageTotals;
+
+    #[test]
+    fn cache_hit_rate_is_none_without_cache_traffic() {
+        let totals = UsageTotals::default();
+        assert_eq!(totals.cache_hit_rate(), None);
+    }
+
+    #[test]
+    fn cache_hit_rate_is_fraction_of_reads_over_total_cache() {
+        let totals = UsageTotals {
+            cache_read_tokens: 6_000,
+            cache_creation_tokens: 4_000,
+            ..UsageTotals::default()
+        };
+        assert_eq!(totals.cache_hit_rate(), Some(0.6));
+    }
+
+    #[test]
+    fn project_name_from_cwd_takes_last_two_segments() {
+        assert_eq!(super::project_name_from_cwd("/Users/me/work/foo"), "work/foo");
+        assert_eq!(super::project_name_from_cwd("foo"), "foo");
+        assert_eq!(super::project_name_from_cwd(""), "unknown");
+    }
 }

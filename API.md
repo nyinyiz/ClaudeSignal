@@ -14,7 +14,8 @@ Local HTTP API served from the same Axum server as the dashboard.
 | `/api/logs` | GET | Recent log entries |
 | `/api/usage` | GET | Live status-line usage snapshot |
 | `/api/usage` | POST | Post Claude Code status-line JSON |
-| `/api/usage/history` | GET | Aggregated local transcript usage |
+| `/api/config` | GET | Read the current configuration (budget thresholds, alert settings) |
+|  | GET | Read the current configuration (budget thresholds, alert settings) |
 | `/ws` | GET | WebSocket for real-time updates |
 
 ## Key Responses

@@ -1,6 +1,8 @@
 pub mod attach;
+pub mod alerts;
 pub mod claude_runner;
 pub mod cli;
+pub mod config;
 pub mod db;
 pub mod error;
 pub mod log_buffer;

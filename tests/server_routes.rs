@@ -128,3 +128,25 @@ async fn usage_routes_accept_status_line_payloads() {
     );
     assert_eq!(json["usage"]["sevenDayPercent"].as_f64(), Some(37.0));
 }
+
+#[tokio::test]
+async fn config_route_returns_defaults() {
+    let state = AppState::new(200);
+    let app = build_router(state);
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/api/config")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let json: Value = serde_json::from_slice(&bytes).unwrap();
+    assert!(json["budget"]["daily_budget_usd"].is_null());
+    assert_eq!(json["alerts"]["rate_limit_warn_percent"], 80.0);
+    assert_eq!(json["alerts"]["osascript_notifications"], true);
+}
