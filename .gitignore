@@ -38,3 +38,6 @@
 
 # Embedded third-party tool
 /tools/claude-usage/
+
+# Playwright MCP
+.playwright-mcp/

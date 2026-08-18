@@ -449,19 +449,32 @@ a {
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--primary-2), #1b1715 42%);
-  box-shadow: inset 0 -8px 16px rgba(0, 0, 0, 0.35);
 }
 
-.brand-mark span {
-  width: 20px;
-  height: 20px;
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 50% 50%, #76e1ff 0 2px, transparent 3px),
-    radial-gradient(circle at 50% 50%, rgba(118, 225, 255, 0.35), transparent 9px),
-    #0e1718;
-  border: 1px solid rgba(255, 215, 169, 0.25);
+.brand-mark svg {
+  width: 40px;
+  height: 40px;
+}
+
+.signal-pulse {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: pulseDraw 2s ease-in-out infinite;
+}
+
+.signal-dot {
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes pulseDraw {
+  0% { stroke-dashoffset: 60; opacity: 0.4; }
+  50% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -60; opacity: 0.4; }
+}
+
+@keyframes dotPulse {
+  0%, 100% { r: 2; opacity: 0.6; }
+  50% { r: 3; opacity: 1; }
 }
 
 .eyebrow,
