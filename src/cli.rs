@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 pub struct Cli {
     #[arg(long, default_value = "0.0.0.0")]
     pub host: String,
-    #[arg(short, long, default_value_t = 3000)]
+    #[arg(short, long, default_value_t = 3004)]
     pub port: u16,
     #[command(subcommand)]
     pub command: Commands,
