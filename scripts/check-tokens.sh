@@ -12,9 +12,10 @@ TOKENS="web/tokens.css"
 SHEETS=(web/styles.css web/usage-styles.css web/health-styles.css web/tokens.css)
 THEMES=(cozy matcha graphite ember paper)
 
-# Tokens set at runtime by JavaScript, or scoped to a mood/state class rather
-# than a theme. Not expected in tokens.css.
-ALLOWLIST="look-x|look-y|bar|mood-accent|mood-accent-2|mood-glow|mood-glow-soft|mood-badge-bg|cat-fur-start|cat-fur-end|cat-ear-inner"
+# Tokens set at runtime by JavaScript, or scoped to a mood/rating/kind state
+# rather than a theme, so they are resolved per element and not per theme.
+# Not expected in tokens.css.
+ALLOWLIST="look-x|look-y|bar|mood-accent|mood-accent-2|mood-glow|mood-glow-soft|mood-badge-bg|cat-fur-start|cat-fur-end|cat-ear-inner|tone-fg|tone-bg|kind-color"
 
 fail=0
 
