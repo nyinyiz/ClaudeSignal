@@ -15,6 +15,7 @@ use crate::{
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(index))
+        .route("/tokens.css", get(tokens))
         .route("/styles.css", get(styles))
         .route("/app.js", get(app_js))
         .route("/themes.js", get(themes_js))
@@ -37,6 +38,10 @@ pub fn build_router(state: AppState) -> Router {
 
 async fn index() -> Html<&'static str> {
     Html(include_str!("../web/index.html"))
+}
+
+async fn tokens() -> Response {
+    typed_static(include_str!("../web/tokens.css"), "text/css; charset=utf-8")
 }
 
 async fn styles() -> Response {

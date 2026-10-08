@@ -41,3 +41,6 @@
 
 # Playwright MCP
 .playwright-mcp/
+
+# Superpowers design specs (local only)
+docs/superpowers/
