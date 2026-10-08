@@ -5,6 +5,13 @@
   animation: fadeUp 0.4s ease;
 }
 
+/* A class selector outranks the UA sheet's [hidden] rule, so these panels need
+ * to opt back in explicitly or the loading overlay never goes away. */
+.health-page-loading[hidden],
+.health-page-content[hidden] {
+  display: none;
+}
+
 .health-page-loading {
   display: flex;
   flex-direction: column;
@@ -20,7 +27,7 @@
 }
 
 .health-empty {
-  color: var(--text-muted);
+  color: var(--muted-foreground);
   font-size: 0.85rem;
   padding: 2rem;
   text-align: center;
@@ -61,7 +68,7 @@
 
 .health-stat-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -70,11 +77,11 @@
   font-family: var(--font-mono);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--foreground);
 }
 
 .health-stat--featured strong {
-  color: var(--green);
+  color: var(--success);
 }
 
 /* Gauge grid */
@@ -106,7 +113,7 @@
 
 .gauge-bg {
   fill: none;
-  stroke: var(--line);
+  stroke: var(--border);
   stroke-width: 6;
 }
 
@@ -119,10 +126,10 @@
   transition: stroke-dashoffset 0.8s ease;
 }
 
-.gauge-fill--green { stroke: var(--green); }
-.gauge-fill--blue { stroke: var(--primary-2); }
-.gauge-fill--purple { stroke: #a78bfa; }
-.gauge-fill--orange { stroke: #f59e0b; }
+.gauge-fill--green { stroke: var(--success); }
+.gauge-fill--blue { stroke: var(--primary-emphasis); }
+.gauge-fill--purple { stroke: var(--chart-5); }
+.gauge-fill--orange { stroke: var(--severity-medium); }
 
 .gauge-value {
   position: absolute;
@@ -133,12 +140,12 @@
   font-family: var(--font-mono);
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--foreground);
 }
 
 .gauge-label {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--muted-foreground);
   text-align: center;
 }
 
@@ -159,12 +166,12 @@
 
 .health-bar-label {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--muted-foreground);
 }
 
 .health-bar-track {
   height: 8px;
-  background: var(--line);
+  background: var(--border);
   border-radius: 4px;
   overflow: hidden;
 }
@@ -178,7 +185,7 @@
 .health-bar-value {
   font-family: var(--font-mono);
   font-size: 0.8rem;
-  color: var(--text);
+  color: var(--foreground);
   min-width: 70px;
   text-align: right;
 }
@@ -215,15 +222,15 @@
 
 .health-finding span {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--muted-foreground);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.health-finding--high strong { color: #ef4444; }
-.health-finding--medium strong { color: #f59e0b; }
-.health-finding--low strong { color: var(--primary-2); }
-.health-finding--total strong { color: var(--text); }
+.health-finding--high strong { color: var(--severity-high); }
+.health-finding--medium strong { color: var(--severity-medium); }
+.health-finding--low strong { color: var(--primary-emphasis); }
+.health-finding--total strong { color: var(--foreground); }
 
 /* Shimmer blocks */
 .shimmer-grid {
@@ -254,7 +261,7 @@
 }
 
 .shimmer-text {
-  color: var(--text-muted);
+  color: var(--muted-foreground);
   font-size: 0.85rem;
 }
 

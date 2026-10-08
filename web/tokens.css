@@ -1,0 +1,376 @@
+/* ClaudeSignal — semantic design tokens
+ *
+ * Loaded before every other stylesheet on every page.
+ *
+ * Contract: every token in the "Dark base" block below MUST also be defined by
+ * every light theme, and vice versa. Components reference tokens only — never
+ * raw color literals, never theme-conditional rules. scripts/check-tokens.sh
+ * enforces that every var() reference resolves under every theme.
+ *
+ * Depth is expressed through --shadow-* and --glow-*: dark themes keep shadows
+ * near-invisible and carry depth in the glows; light themes use real shadows
+ * and neutralize the glows. Same declaration, correct result either way.
+ */
+
+/* ---------------------------------------------------------------- statics -- */
+
+:root {
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  --font-sans: Manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-lg: 32px;
+  --radius-md: 22px;
+  --radius-sm: 14px;
+}
+
+/* -------------------------------------------------------------- dark base -- */
+/* Shared by the four dark themes. Palette-independent semantics live here so
+ * each theme block below only has to state what actually differs. */
+
+:root:not([data-theme]),
+[data-theme="cozy"],
+[data-theme="matcha"],
+[data-theme="graphite"],
+[data-theme="ember"] {
+  color-scheme: dark;
+
+  /* Elevation */
+  --shadow-panel: 0 24px 80px rgba(0, 0, 0, 0.24);
+  --shadow-modal: 0 28px 90px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.22);
+  --shadow-card-hover: 0 12px 36px rgba(0, 0, 0, 0.3);
+  --shadow-hero: 0 16px 48px rgba(0, 0, 0, 0.28);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-pill: 0 1px 4px rgba(0, 0, 0, 0.15);
+
+  /* Interaction */
+  --hover-overlay: rgba(255, 255, 255, 0.05);
+  --on-primary: #1a1512;
+
+  /* Semantic state */
+  --delta-up-fg: #ff6b6b;
+  --delta-up-bg: rgba(255, 107, 107, 0.1);
+  --delta-down-fg: #4dd0a1;
+  --delta-down-bg: rgba(77, 208, 161, 0.1);
+  --cost-low: var(--scale-good-fg);
+  --cost-mid: var(--scale-warn-fg);
+  --cost-high: var(--scale-bad-fg);
+
+  /* Data-viz */
+  --chart-1: #5b8def;
+  --chart-2: #7c6cf0;
+  --chart-3: #f06292;
+  --chart-4: #4dd0a1;
+  --chart-5: #b06cf0;
+  --chart-line: #76e1ff;
+  --chart-line-glow: rgba(118, 225, 255, 0.4);
+  --chart-line-2: #ffb95a;
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --row-stripe: rgba(255, 215, 169, 0.03);
+  --neutral-bg: rgba(128, 128, 128, 0.08);
+  --on-chart: rgba(255, 255, 255, 0.9);
+  --on-chart-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+
+  /* Three-level scales (cost, cache efficiency, status badges) */
+  --scale-good-fg: #4dd0a1;
+  --scale-good-bg: rgba(77, 208, 161, 0.12);
+  --scale-warn-fg: #ffb74d;
+  --scale-warn-bg: rgba(255, 183, 77, 0.12);
+  --scale-bad-fg: #f06292;
+  --scale-bad-bg: rgba(240, 98, 146, 0.12);
+
+  /* Accent rules and progress fills (gradient endpoints) */
+  --accent-blue-from: #5b8def;
+  --accent-blue-to: #7c6cf0;
+  --accent-warm-from: #ffb95a;
+  --accent-warm-to: #ff8f58;
+  --accent-pink-from: #f06292;
+  --accent-pink-to: #e84393;
+  --accent-green-from: #4dd0a1;
+  --accent-green-to: #38c090;
+  --accent-purple-from: #7c6cf0;
+  --accent-purple-to: #b06cf0;
+  --accent-teal-from: #4dd0a1;
+  --accent-teal-to: #3ab5c0;
+
+  /* Token-type breakdown segments */
+  --seg-input-from: #6b9af0;
+  --seg-input-to: #4a7ae0;
+  --seg-output-from: #f47ba8;
+  --seg-output-to: #e04878;
+  --seg-cache-read-from: #5ce0b5;
+  --seg-cache-read-to: #38c090;
+  --seg-cache-write-from: #ffc567;
+  --seg-cache-write-to: #f0a030;
+
+  /* Severity */
+  --severity-high: #ef4444;
+  --severity-medium: #f59e0b;
+  --severity-low: var(--primary-emphasis);
+
+  /* Character */
+  --tile-cat-bg: #393431;
+  --tile-cat-fg: var(--muted-foreground);
+  --tile-cat-active-bg: var(--success);
+  --tile-cat-active-fg: #0c3825;
+
+  /* Texture */
+  --grid-opacity: 0.22;
+  --grain-opacity: 0;
+  --dot-pattern: rgba(255, 255, 255, 0.06);
+  --sparkline-bar: #433d39;
+  --scrim: rgba(0, 0, 0, 0.5);
+}
+
+/* ------------------------------------------------------------------- cozy -- */
+
+:root:not([data-theme]),
+[data-theme="cozy"] {
+  --background: #161311;
+  --background-deep: #100d0c;
+  --background-end: #120f0e;
+  --card: #1f1b19;
+  --card-elevated: #231f1d;
+  --card-muted: #2e2927;
+  --surface-muted: #2a2522;
+  --border: #524535;
+  --border-soft: rgba(159, 142, 124, 0.28);
+  --border-faint: rgba(159, 142, 124, 0.12);
+  --foreground: #eae1dd;
+  --muted-foreground: #d6c3b0;
+  --subtle-foreground: #9f8e7c;
+  --primary: #ffd7a9;
+  --primary-emphasis: #ffb95a;
+  --success: #55d083;
+  --destructive: #ffb4ab;
+  --track: #3a332f;
+  --glow-warm: rgba(255, 185, 90, 0.08);
+  --glow-cool: rgba(187, 232, 205, 0.045);
+  --grid-line-x: rgba(255, 215, 169, 0.04);
+  --grid-line-y: rgba(255, 215, 169, 0.035);
+  --footer-end: #0f0c0b;
+  --hero-from: rgba(31, 36, 28, 0.8);
+  --hero-to: rgba(31, 27, 25, 0.96);
+}
+
+/* ----------------------------------------------------------------- matcha -- */
+
+[data-theme="matcha"] {
+  --background: #111714;
+  --background-deep: #0b100d;
+  --background-end: #0b0f0d;
+  --card: #19211d;
+  --card-elevated: #202b25;
+  --card-muted: #2a3830;
+  --surface-muted: #243029;
+  --border: #405947;
+  --border-soft: rgba(142, 169, 143, 0.26);
+  --border-faint: rgba(142, 169, 143, 0.12);
+  --foreground: #e8f0e5;
+  --muted-foreground: #c2d5bd;
+  --subtle-foreground: #8ea98f;
+  --primary: #d7efb2;
+  --primary-emphasis: #8fcf7b;
+  --success: #7bdc8a;
+  --destructive: #efafa5;
+  --track: #2c382f;
+  --glow-warm: rgba(143, 207, 123, 0.1);
+  --glow-cool: rgba(215, 239, 178, 0.055);
+  --grid-line-x: rgba(215, 239, 178, 0.04);
+  --grid-line-y: rgba(215, 239, 178, 0.035);
+  --footer-end: #0a0e0b;
+  --hero-from: rgba(24, 38, 30, 0.8);
+  --hero-to: rgba(21, 29, 25, 0.96);
+  --tile-cat-bg: #2c382f;
+  --tile-cat-active-fg: #0b3018;
+  --sparkline-bar: #37473b;
+  --on-primary: #121a14;
+}
+
+/* --------------------------------------------------------------- graphite -- */
+
+[data-theme="graphite"] {
+  --background: #141516;
+  --background-deep: #0d0e0f;
+  --background-end: #0b0c0d;
+  --card: #1d1f20;
+  --card-elevated: #252829;
+  --card-muted: #303436;
+  --surface-muted: #292d2f;
+  --border: #4a5155;
+  --border-soft: rgba(159, 169, 174, 0.24);
+  --border-faint: rgba(159, 169, 174, 0.12);
+  --foreground: #eceff0;
+  --muted-foreground: #c5cacc;
+  --subtle-foreground: #9fa9ae;
+  --primary: #d8e3e8;
+  --primary-emphasis: #91b3c2;
+  --success: #73d391;
+  --destructive: #efb0aa;
+  --track: #303436;
+  --glow-warm: rgba(145, 179, 194, 0.1);
+  --glow-cool: rgba(216, 227, 232, 0.055);
+  --grid-line-x: rgba(216, 227, 232, 0.04);
+  --grid-line-y: rgba(216, 227, 232, 0.035);
+  --footer-end: #0b0c0d;
+  --hero-from: rgba(32, 36, 38, 0.8);
+  --hero-to: rgba(27, 30, 31, 0.96);
+  --tile-cat-bg: #303436;
+  --tile-cat-active-fg: #0a2c1a;
+  --sparkline-bar: #3c4245;
+  --on-primary: #14181a;
+}
+
+/* ------------------------------------------------------------------ ember -- */
+
+[data-theme="ember"] {
+  --background: #19110f;
+  --background-deep: #110b0a;
+  --background-end: #0f0908;
+  --card: #231816;
+  --card-elevated: #2b1d19;
+  --card-muted: #3a2821;
+  --surface-muted: #33231e;
+  --border: #634130;
+  --border-soft: rgba(203, 132, 87, 0.25);
+  --border-faint: rgba(203, 132, 87, 0.12);
+  --foreground: #fff0e7;
+  --muted-foreground: #e5beaa;
+  --subtle-foreground: #b9876f;
+  --primary: #ffd0a3;
+  --primary-emphasis: #ff8f58;
+  --success: #73d391;
+  --destructive: #ffb4ab;
+  --track: #3a2821;
+  --glow-warm: rgba(255, 143, 88, 0.12);
+  --glow-cool: rgba(255, 208, 163, 0.045);
+  --grid-line-x: rgba(255, 208, 163, 0.04);
+  --grid-line-y: rgba(255, 208, 163, 0.035);
+  --footer-end: #0e0807;
+  --hero-from: rgba(44, 28, 23, 0.8);
+  --hero-to: rgba(33, 23, 21, 0.96);
+  --tile-cat-bg: #3a2821;
+  --tile-cat-active-fg: #0a2c1a;
+  --sparkline-bar: #4a3228;
+  --on-primary: #1d1108;
+}
+
+/* ------------------------------------------------------------------ paper -- */
+/* Paper Light defines the same token set as the dark base, with light values.
+ * It must need no component-level overrides. */
+
+[data-theme="paper"] {
+  color-scheme: light;
+
+  --background: #f5f0e8;
+  --background-deep: #ebe4d6;
+  --background-end: #f0e9dc;
+  --card: #fffcf8;
+  --card-elevated: #faf6ef;
+  --card-muted: #f0e8da;
+  --surface-muted: #efe8dc;
+  --border: #d6c9b5;
+  --border-soft: rgba(140, 115, 80, 0.16);
+  --border-faint: rgba(140, 115, 80, 0.08);
+  --foreground: #2a2118;
+  --muted-foreground: #5c4e3c;
+  --subtle-foreground: #8a7962;
+  --primary: #8a5a12;
+  --primary-emphasis: #b87418;
+  --success: #2a7d4e;
+  --destructive: #b83d34;
+  --track: #e4d9c9;
+  --glow-warm: rgba(184, 116, 24, 0.1);
+  --glow-cool: rgba(160, 190, 140, 0.07);
+  --grid-line-x: rgba(138, 90, 18, 0.04);
+  --grid-line-y: rgba(138, 90, 18, 0.03);
+  --footer-end: #e8dfcf;
+  --hero-from: rgba(255, 252, 248, 0.95);
+  --hero-to: rgba(250, 246, 239, 0.98);
+
+  /* Elevation — real shadows, since there is no dark field to glow against */
+  --shadow-panel: 0 1px 3px rgba(120, 90, 50, 0.08), 0 12px 32px rgba(120, 90, 50, 0.07);
+  --shadow-modal: 0 4px 12px rgba(120, 90, 50, 0.12), 0 28px 70px rgba(120, 90, 50, 0.14);
+  --shadow-card: 0 1px 3px rgba(120, 90, 50, 0.08), 0 8px 24px rgba(120, 90, 50, 0.06);
+  --shadow-card-hover: 0 2px 8px rgba(120, 90, 50, 0.12), 0 16px 40px rgba(120, 90, 50, 0.1);
+  --shadow-hero: 0 2px 6px rgba(120, 90, 50, 0.06), 0 12px 32px rgba(120, 90, 50, 0.08);
+  --shadow-inset: inset 0 1px 3px rgba(120, 90, 50, 0.08);
+  --shadow-pill: 0 1px 4px rgba(120, 90, 50, 0.1);
+
+  /* Interaction */
+  --hover-overlay: rgba(138, 90, 18, 0.05);
+  --on-primary: #fffcf8;
+
+  /* Semantic state — darkened for contrast against light surfaces */
+  --delta-up-fg: #a83229;
+  --delta-up-bg: rgba(168, 50, 41, 0.08);
+  --delta-down-fg: #1e7a45;
+  --delta-down-bg: rgba(30, 122, 69, 0.08);
+  --cost-low: var(--scale-good-fg);
+  --cost-mid: var(--scale-warn-fg);
+  --cost-high: var(--scale-bad-fg);
+
+  /* Data-viz — same hues, darkened to hold contrast on cream */
+  --chart-1: #3366cc;
+  --chart-2: #5b46c9;
+  --chart-3: #c2185b;
+  --chart-4: #1e7a55;
+  --chart-5: #7b3fb5;
+  --chart-line: #1d6f8f;
+  --chart-line-glow: rgba(29, 111, 143, 0.25);
+  --chart-line-2: #b87418;
+  --chart-grid: rgba(138, 90, 18, 0.1);
+  --row-stripe: rgba(138, 90, 18, 0.025);
+  --neutral-bg: rgba(120, 100, 70, 0.08);
+  --on-chart: #ffffff;
+  --on-chart-shadow: 0 1px 2px rgba(60, 40, 20, 0.45);
+
+  /* Three-level scales — darkened so the text reads on cream */
+  --scale-good-fg: #1e7a45;
+  --scale-good-bg: rgba(30, 122, 69, 0.1);
+  --scale-warn-fg: #96610f;
+  --scale-warn-bg: rgba(150, 97, 15, 0.1);
+  --scale-bad-fg: #b83d34;
+  --scale-bad-bg: rgba(184, 61, 52, 0.1);
+
+  /* Accent rules and progress fills — kept saturated, they sit on white */
+  --accent-blue-from: #3366cc;
+  --accent-blue-to: #5b46c9;
+  --accent-warm-from: #c98016;
+  --accent-warm-to: #d4601f;
+  --accent-pink-from: #c2185b;
+  --accent-pink-to: #a31250;
+  --accent-green-from: #1e7a55;
+  --accent-green-to: #16694a;
+  --accent-purple-from: #5b46c9;
+  --accent-purple-to: #7b3fb5;
+  --accent-teal-from: #1e7a55;
+  --accent-teal-to: #137a84;
+
+  /* Token-type breakdown segments — deepened to carry white labels */
+  --seg-input-from: #3a66cc;
+  --seg-input-to: #27479b;
+  --seg-output-from: #c23a6a;
+  --seg-output-to: #9e2650;
+  --seg-cache-read-from: #17795e;
+  --seg-cache-read-to: #0f5f49;
+  --seg-cache-write-from: #9a6a12;
+  --seg-cache-write-to: #7d5409;
+
+  /* Severity — darkened to hold contrast on cream */
+  --severity-high: #c0392b;
+  --severity-medium: #a06510;
+  --severity-low: var(--primary-emphasis);
+
+  /* Character */
+  --tile-cat-bg: var(--surface-muted);
+  --tile-cat-fg: var(--muted-foreground);
+  --tile-cat-active-bg: #d4edda;
+  --tile-cat-active-fg: #1a6b38;
+
+  /* Texture */
+  --grid-opacity: 0.12;
+  --grain-opacity: 0.35;
+  --dot-pattern: rgba(138, 90, 18, 0.08);
+  --sparkline-bar: #d6c9b5;
+  --scrim: rgba(80, 60, 35, 0.35);
+}

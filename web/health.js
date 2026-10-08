@@ -1,6 +1,15 @@
 (() => {
   "use strict";
 
+  const THEME_KEY = "claude-signal-theme";
+
+  // The health page has no theme picker of its own, but it still has to honour
+  // the theme chosen on the dashboard. THEMES comes from themes.js.
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    document.documentElement.dataset.theme = THEMES.has(saved) ? saved : "cozy";
+  }
+
   const loadingEl = document.getElementById("loadingState");
   const contentEl = document.getElementById("pageContent");
   const refreshBtn = document.getElementById("refreshBtn");
@@ -147,5 +156,6 @@
     return h + "h " + m + "m";
   }
 
+  initTheme();
   load();
 })();
