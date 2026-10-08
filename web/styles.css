@@ -2096,10 +2096,13 @@ body.settings-open {
 }
 
 .history-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
   margin-top: 28px;
   padding-top: 20px;
   border-top: 1px solid var(--border-soft);
-  text-align: center;
 }
 
 .view-all-link {
